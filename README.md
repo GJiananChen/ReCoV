@@ -13,9 +13,11 @@ HECKTOR 2022: https://hecktor.grand-challenge.org/
 Jianan:
 - [ ] Bioinformatics datasets
 - [ ] Reducing number of epochs
+      
 Vishvesh:
 - [ ] Uncertainty + rank
 - [ ] Optimization for less runs
+      
 Tony:
 - [ ] Self-supervised features
 - [ ] CV datasets
