@@ -10,9 +10,9 @@ from sklearn.preprocessing import LabelEncoder
 from statsmodels.stats.multitest import multipletests
 from scipy.stats import binom
 
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.ensemble import RandomForestClassifier
+# from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import accuracy_score, roc_auc_score, auc
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         random.seed(1)
         np.random.seed(1)
 
-        mushroom = pd.read_csv(r'E:\PycharmProjects\AMINN_torch_dev\data/mushrooms.csv')
+        mushroom = pd.read_csv(r'./mushrooms.csv')
 
         cols = mushroom.columns.to_list()
         cols.remove('class')
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                 outlier_df = pd.DataFrame({'ids': ids, 'counts': counts})
                 ax = sns.histplot(data=counts, stat='count')
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(400))
-                plt.savefig('mushroom_hist_NR5_78125.png')
+                plt.savefig('./results/mushroom_hist_NR5_78125.png')
                 upper, lower = random_state*1/5 + 2*math.sqrt(random_state*(5-1)/5**2), random_state*1/5 - 2*math.sqrt(random_state*(5-1)/5**2)
                 print(np.where(counts > upper))
 
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                 ER2 = len(F_t.intersection(M))/len(M)
                 NEP = len(F.intersection(M))/ len(F)
 
-                with open(f'mushroom_{random_state}_{NOISE_RATIO}_with_candidates.pkl','wb') as f:
+                with open(f'./results/mushroom_{random_state}_{NOISE_RATIO}_with_candidates.pkl','wb') as f:
                     pickle.dump(F, f)
                     pickle.dump(G, f)
                     pickle.dump(F_t, f)
