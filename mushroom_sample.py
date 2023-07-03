@@ -41,9 +41,10 @@ def train_one_run(fold_splits):
         test_labels.append(y_test)
     return aucs, test_ids, pred_probs, test_labels
 
-def rank_weights(aucs, test_ids, pred_probs, test_labels)->np.array:
+def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     '''
     Gives weighting to all the samples in the dataset
+    High weight implies more probability of being selected in the top fold
     '''
     n_folds = len(aucs)
     number_ids = [len(i) for i in test_ids]
@@ -54,16 +55,18 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels)->np.array:
     # weights_auc = aucsweights[np.argsort(aucs)]
     # weights_auc = np.max(aucs)/aucs
     weights_auc = np.max(aucs) - aucs
-    weights_auc = (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
-    weights_like = temp.max() - temp
+    weights_like = 1 - (temp.max() - temp)
     # weights = (weights_auc**80)*weights_like
-    weights = weights_auc*5 + weights_like
-    weights = weights[test_ids_all]
+    weights = weights_auc*4 + weights_like
+    # weights = weights_auc
+    weights = weights[np.argsort(test_ids_all)]
+    memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
-    return weights
+    return memory
 
 N_RUNS = 500
 NOISE_RATIO = 10
@@ -89,6 +92,7 @@ noisy = random.sample(list(enumerate(y)), int(0.01*NOISE_RATIO*len(y)))
 for i in noisy:
     index, label = i[0], i[1]
     y[index] = 1 - label
+    # y[index] = label
     y = pd.Series(y)
 
 TOP_K = len(noisy)
@@ -96,16 +100,17 @@ random_state = 1
 kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
 fold_splits = list(kf.split(X,y))
 gt = [x[0] for x in noisy]
+memory = np.zeros_like(y)
 for run in range(N_RUNS):
     #train for one run
     aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits)
-    print(aucs)
+    print(f"Iteration {run}: {aucs}")
     #rank the ids
-    weights = rank_weights(aucs,test_ids, pred_probs, test_labels)
+    memory = rank_weights(aucs,test_ids, pred_probs, test_labels, memory)
     #Generate new set of folds based on weights
-    fold_splits, fold_ids = sample_folds(N_FOLDS,weights,TAU)
+    fold_splits, fold_ids = sample_folds(N_FOLDS,memory,TAU)
     #Get K worst samples
-    identified = np.argsort(weights)[:TOP_K]
+    identified = np.argsort(memory)[:TOP_K]
     #Evaluate
     gt = [x[0] for x in noisy]
     F = set(identified)
