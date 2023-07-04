@@ -1,3 +1,13 @@
+'''
+Observations:
+1. just auc leads to slow convergence
+2. like leads to one shot convergence, but is dependednt on the model
+3. Model regularization leads to worsening performance of NEP
+4. Tau implies confidence of sampling, high tau leads to more like uniform dist and vice versa
+5. Lower Tau leads to faster convergence but also leads to rigidness of folds
+6. High regularization and low Tau leads to subsequent decrease in performace
+'''
+
 import os
 import warnings
 warnings.filterwarnings("ignore")
@@ -28,7 +38,7 @@ def train_one_run(fold_splits):
     test_labels = []
     for fold, (train, test) in enumerate(fold_splits):
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train].to_list(), y.iloc[test].to_list()
-        lr = LogisticRegression()
+        lr = LogisticRegression(C = 0.001)
         lr.fit(X_train, y_train)
         y_pred = lr.predict(X_test)
         probs = lr.predict_proba(X_test)
@@ -61,17 +71,31 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
     weights_like = 1 - (temp.max() - temp)
     # weights = (weights_auc**80)*weights_like
-    weights = weights_auc*4 + weights_like
-    # weights = weights_auc
+    # weights = 1*weights_auc + weights_like
+    weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
     return memory
 
-N_RUNS = 500
+def plot_weights(x,noise_labels):
+    labels = np.zeros_like(x)
+    labels[noise_labels] = 1
+    data_idx = np.arange(len(x))
+    sorting = np.argsort(x)
+    labels = labels[sorting]
+    x = x[sorting]
+    x_clean = x[np.where(labels==0)[0]]
+    x_noise = x[np.where(labels==1)[0]]
+    plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
+    plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
+    plt.legend(["clean","noise"])
+    plt.savefig("temp.png")
+
+N_RUNS = 10
 NOISE_RATIO = 10
 N_FOLDS = 5
-TAU = 1
+TAU = 0.1
 random.seed(1)
 np.random.seed(1)
 
@@ -107,6 +131,10 @@ for run in range(N_RUNS):
     print(f"Iteration {run}: {aucs}")
     #rank the ids
     memory = rank_weights(aucs,test_ids, pred_probs, test_labels, memory)
+    # random.seed(run)
+    # np.random.seed(run)
+    # kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
+    # fold_splits = list(kf.split(X,y))
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(N_FOLDS,memory,TAU)
     #Get K worst samples
@@ -120,4 +148,9 @@ for run in range(N_RUNS):
     ER1 = len(F.intersection(G))/len(G)
     ER2 = len(F_t.intersection(M))/len(M)
     NEP = len(F.intersection(M))/ len(F)
+    # print(np.sort(np.array(list(F.intersection(G))))[:30])
     print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP,ER1,ER2))
+plot_weights(memory,gt)
+#     if (run+1)%10==0:
+#         print("ok")
+# print("ok")
