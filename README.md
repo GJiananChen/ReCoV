@@ -9,6 +9,9 @@ Mushroom dataset: https://www.kaggle.com/datasets/uciml/mushroom-classification
 TCIA-HN1: https://wiki.cancerimagingarchive.net/display/Public/Head-Neck-Radiomics-HN1
 HECKTOR 2022: https://hecktor.grand-challenge.org/
 
+## Drive link to extracted CIFAR10 features
+https://drive.google.com/file/d/1hxEmGA4IFUK6mH554ZFw4FymW4Pcw_L1/view?usp=sharing
+
 ## TODO:
 Jianan:
 - [ ] Bioinformatics datasets
