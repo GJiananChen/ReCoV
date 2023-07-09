@@ -19,38 +19,40 @@ import csv
 import random
 # Training settings
 # settings for HN and Lung: lr=0.0005, epoch=80
-parser = argparse.ArgumentParser(description='PyTorch Multifocal Bags Example')
-parser.add_argument('--epochs', type=int, default=50, metavar='N',
-                    help='number of epochs to train (default: 20)')
-parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                    help='learning rate (default: 0.0005)')
-parser.add_argument('--reg', type=float, default=0.001, metavar='R',
-                    help='weight decay')
-parser.add_argument('--dataset', type=str, default='hecktor_train', metavar='D',
-                    help='bags have a positive labels if they contain at least one 9')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--model', type=str, default='ins', help='Choose b/w attention and gated_attention')
-parser.add_argument('--subset', default='all', type=str,
-                    help='subset of dataset to use')
-parser.add_argument('--folds', default=5, type=int,
-                    help='number of folds for cross validation')
-parser.add_argument('--n_runs', default=3, type=int,
-                    help='number of runs for repeated validation')
-parser.add_argument('--censor',
-                    default=730,
-                    type=int, help='threshold for right censoring')
-parser.add_argument('--pooling', default='sum', type=str,
-                    help='which multiple instance pooling to use')
-parser.add_argument('--norm', dest='normalize', action='store_true', help='two step normalization')
-parser.add_argument('--no-norm', dest='normalize', action='store_false', help='z-score normalization')
-parser.set_defaults(normalize=True)
+def get_parser():
+    parser = argparse.ArgumentParser(description='PyTorch Multifocal Bags Example')
+    parser.add_argument('--epochs', type=int, default=50, metavar='N',
+                        help='number of epochs to train (default: 20)')
+    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
+                        help='learning rate (default: 0.0005)')
+    parser.add_argument('--reg', type=float, default=0.001, metavar='R',
+                        help='weight decay')
+    parser.add_argument('--dataset', type=str, default='hecktor_train', metavar='D',
+                        help='bags have a positive labels if they contain at least one 9')
+    parser.add_argument('--seed', type=int, default=1, metavar='S',
+                        help='random seed (default: 1)')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disables CUDA training')
+    parser.add_argument('--model', type=str, default='ins', help='Choose b/w attention and gated_attention')
+    parser.add_argument('--subset', default='all', type=str,
+                        help='subset of dataset to use')
+    parser.add_argument('--folds', default=5, type=int,
+                        help='number of folds for cross validation')
+    parser.add_argument('--n_runs', default=3, type=int,
+                        help='number of runs for repeated validation')
+    parser.add_argument('--censor',
+                        default=730,
+                        type=int, help='threshold for right censoring')
+    parser.add_argument('--pooling', default='sum', type=str,
+                        help='which multiple instance pooling to use')
+    parser.add_argument('--norm', dest='normalize', action='store_true', help='two step normalization')
+    parser.add_argument('--no-norm', dest='normalize', action='store_false', help='z-score normalization')
+    parser.set_defaults(normalize=True)
 
-args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args = parser.parse_args()
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+    return args
 
 def set_seed(seed: int = 42) -> None:
     np.random.seed(seed)
@@ -184,6 +186,7 @@ def test(test_loader):
     return test_error, test_loss, test_c, bag_label_all, risk_pred_all, ids, y_instances
 
 if __name__ == '__main__':
+    args = get_parser()
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
         print('\nGPU is ON!')
@@ -195,8 +198,12 @@ if __name__ == '__main__':
     for seed in range(args.seed,args.seed+args.n_runs):
         set_seed(seed)
         wandb.config = vars(args)
-        wandb.init(project="prospero_hn", entity="jiananchen", config=wandb.config, name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{seed}')
-        artifact = wandb.Artifact(f'{wandb.run.name}_preds', 'predictions')
+        wandb.init(project="recov_hecktor",
+                   config=wandb.config, 
+                   name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{seed}',
+                   dir="/localdisk3/ramanav/Results/wandb",
+                   mode="disabled")
+        # artifact = wandb.Artifact(f'{wandb.run.name}_preds', 'predictions')
 
         # scripts for generating multiple instance survival regression datasets from radiomics spreadsheets
         # For more information please check dataloader.py
@@ -277,7 +284,7 @@ if __name__ == '__main__':
         candidates = test_ids_all[smallest_index(aucs_last)]
         all_candidates.append(candidates)
 
-        wandb.log_artifact(artifact)
+        # wandb.log_artifact(artifact)
         wandb.log({"last_aucs_average": np.mean(aucs_last)})
 
     # save sample ids that belongs to the worst folds across runs

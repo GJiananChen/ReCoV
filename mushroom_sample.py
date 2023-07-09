@@ -99,7 +99,7 @@ TAU = 0.1
 random.seed(1)
 np.random.seed(1)
 
-mushroom = pd.read_csv(r'./mushrooms.csv')
+mushroom = pd.read_csv(r'./data/mushrooms.csv')
 
 cols = mushroom.columns.to_list()
 cols.remove('class')
