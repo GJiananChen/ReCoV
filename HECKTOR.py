@@ -38,7 +38,7 @@ def get_parser():
                         help='subset of dataset to use')
     parser.add_argument('--folds', default=5, type=int,
                         help='number of folds for cross validation')
-    parser.add_argument('--n_runs', default=3, type=int,
+    parser.add_argument('--n_runs', default=500, type=int,
                         help='number of runs for repeated validation')
     parser.add_argument('--censor',
                         default=730,
@@ -83,7 +83,7 @@ def threshold_indice(lst, threshold=0.5):
     '''
     return [x[0] for x in enumerate(lst) if x[1] < threshold]
 
-def train(epoch, train_loader):
+def train(epoch, train_loader, model, optimizer, args):
     '''
     code for training a model
     :param epoch: number of epoches for training the model
@@ -130,7 +130,7 @@ def train(epoch, train_loader):
 
     return train_error, train_loss, train_c
 
-def test(test_loader):
+def test(test_loader, model, args):
     '''
     code for testing a model
     :param test_loader: dataloader for testing
@@ -149,41 +149,45 @@ def test(test_loader):
     bag_fu_all = []
 
     criterion = NegativeLogLikelihood().cuda()
+    with torch.no_grad():
+        # testing
+        for batch_idx, (data, bag_label, bag_id, bag_fu) in enumerate(test_loader):
+            data = torch.stack(data).squeeze().float()
+            if args.cuda:
+                data, bag_label, bag_fu = data.cuda(), bag_label.cuda(), bag_fu.cuda()
+            data, bag_label, bag_fu = Variable(data), Variable(bag_label), Variable(bag_fu)
 
-    # testing
-    for batch_idx, (data, bag_label, bag_id, bag_fu) in enumerate(test_loader):
-        data = torch.stack(data).squeeze().float()
-        if args.cuda:
-            data, bag_label, bag_fu = data.cuda(), bag_label.cuda(), bag_fu.cuda()
-        data, bag_label, bag_fu = Variable(data), Variable(bag_label), Variable(bag_fu)
+            loss, attention_weights = model.calculate_objective(data, bag_label)
+            test_loss += loss.data[0]
+            error, predicted_label, risk_pred = model.calculate_classification_error(data, bag_label)
+            y_instances.append(predicted_label)
+            bag_label_all.append(bag_label)
+            risk_pred_all.append(risk_pred)
+            bag_fu_all.append(bag_fu)
 
-        loss, attention_weights = model.calculate_objective(data, bag_label)
-        test_loss += loss.data[0]
-        error, predicted_label, risk_pred = model.calculate_classification_error(data, bag_label)
-        y_instances.append(predicted_label)
-        bag_label_all.append(bag_label)
-        risk_pred_all.append(risk_pred)
-        bag_fu_all.append(bag_fu)
+            # y_trues.append(bag_label.max().cpu().item())
+            # y_preds.append(y_prob.cpu().item())
+            ids.append(bag_id[0][0])
+            test_error += error
 
-        # y_trues.append(bag_label.max().cpu().item())
-        # y_preds.append(y_prob.cpu().item())
-        # ids.append(bag_id[0][0])
-        test_error += error
-
-        # if batch_idx < 5:  # plot bag labels and instance labels for first 5 bags
-        #     bag_level = (bag_label.cpu().data.numpy()[0], int(predicted_label.cpu().data.numpy()[0][0]))
-        #     # instance_level = list(zip(instance_labels.numpy()[0].tolist(),
-        #     #                      np.round(attention_weights.cpu().data.numpy()[0], decimals=3).tolist()))
-        #
-        #     print('\nTrue Bag Label, Predicted Bag Label: {}'.format(bag_level))
-    risk_pred_all, bag_label_all, bag_fu_all = torch.stack(risk_pred_all), torch.stack(bag_label_all), torch.stack(
-            bag_fu_all)
-    test_c = c_index(-risk_pred_all, bag_label_all, bag_fu_all)
-    test_error /= len(test_loader)
-    test_loss = criterion(risk_pred_all, bag_label_all, bag_fu_all, model.cuda())
-    # auc = roc_auc_score(y_trues, y_preds)
-    # print('\nTest Set, Loss: {:.4f}, Test error: {:.4f}, Test AUC: {:.4f}'.format(test_loss.cpu().numpy()[0], test_error, auc))
-    return test_error, test_loss, test_c, bag_label_all, risk_pred_all, ids, y_instances
+            # if batch_idx < 5:  # plot bag labels and instance labels for first 5 bags
+            #     bag_level = (bag_label.cpu().data.numpy()[0], int(predicted_label.cpu().data.numpy()[0][0]))
+            #     # instance_level = list(zip(instance_labels.numpy()[0].tolist(),
+            #     #                      np.round(attention_weights.cpu().data.numpy()[0], decimals=3).tolist()))
+            #
+            #     print('\nTrue Bag Label, Predicted Bag Label: {}'.format(bag_level))
+        risk_pred_all, bag_label_all, bag_fu_all = torch.stack(risk_pred_all), torch.stack(bag_label_all), torch.stack(
+                bag_fu_all)
+        test_c = c_index(-risk_pred_all, bag_label_all, bag_fu_all)
+        test_error /= len(test_loader)
+        test_loss = criterion(risk_pred_all, bag_label_all, bag_fu_all, model.cuda())
+        # auc = roc_auc_score(y_trues, y_preds)
+        # print('\nTest Set, Loss: {:.4f}, Test error: {:.4f}, Test AUC: {:.4f}'.format(test_loss.cpu().numpy()[0], test_error, auc))
+        
+        # #Per data point concordance
+        # risk_matrix = 
+    
+    return test_error, test_loss, test_c, bag_label_all, risk_pred_all, ids, y_instances, bag_fu_all
 
 if __name__ == '__main__':
     args = get_parser()
@@ -201,7 +205,7 @@ if __name__ == '__main__':
         wandb.init(project="recov_hecktor",
                    config=wandb.config, 
                    name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{seed}',
-                   dir="/localdisk3/ramanav/Results/wandb",
+                #    dir="/localdisk3/ramanav/Results/wandb",
                    mode="disabled")
         # artifact = wandb.Artifact(f'{wandb.run.name}_preds', 'predictions')
 
@@ -256,7 +260,7 @@ if __name__ == '__main__':
 
             for epoch in range(1, args.epochs + 1):
                 train_error, train_loss, train_auc = train(epoch, trainloader)
-                test_error, test_loss, auc, _, _, _, _ = test(testloader)
+                test_error, test_loss, auc, _, _, _, _, _ = test(testloader)
                 print(f'Epoch: {epoch}, Train error: {train_error:.4f}, '
                     f'Test error: {test_error:.4f}, Train_AUC: {train_auc:.4f}, Test_AUC: {auc:.4f}')
                 wandb.log({"train_error": train_error, "test_error": test_error, "train_auc": train_auc, "test_auc": auc, "epoch": epoch})
