@@ -79,29 +79,17 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     number_ids = [len(i) for i in test_ids]
     test_ids_all = np.concatenate(test_ids)
     # uncertainity_all = np.concatenate(uncertainity_all)
-    # pred_probs_all = np.concatenate(pred_probs)
-    # test_labels_all = np.concatenate(test_labels)
-    # aucsweights = np.linspace(0,1,n_folds)
-    # weights_auc = aucsweights[np.argsort(aucs)]
-    # weights_auc = np.max(aucs)/aucs
-    # weights_auc = np.max(aucs) - aucs
-    # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+
     weights_auc = aucs
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
-
-    # con_metrics_all = []
-    # for i in range(n_folds):
-        # con_metrics_all.append(concordance_indvidual(-risk_pred_all[i],bag_fu_all[i], bag_labels[i]))
-    # con_metrics_all = np.concatenate(con_metrics_all)
-    # weights_like = 1 - (con_metrics_all.max() - con_metrics_all)
     
     con_metrics_all = concordance_indvidual(-np.concatenate(risk_pred_all),np.concatenate(bag_fu_all),np.concatenate(bag_labels))
     weights_like = con_metrics_all.copy()
     
     # weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
 
-    # weights = 7*weights_auc + weights_like
-    weights = 3*weights_auc + weights_like
+    # weights = 3*weights_auc + weights_like
+    weights = 2*weights_auc + weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
@@ -166,7 +154,6 @@ for seed in range(args.seed,args.seed+args.n_runs):
                 name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{seed}',
                 # dir="/localdisk3/ramanav/Results/wandb",
                 mode="disabled")
-    # artifact = wandb.Artifact(f'{wandb.run.name}_preds', 'predictions')
     # scripts for generating multiple instance survival regression datasets from radiomics spreadsheets
     aucs = []
     aucs_last = []
@@ -215,8 +202,6 @@ for seed in range(args.seed,args.seed+args.n_runs):
             test_error, test_loss, auc, bag_label_all, risk_pred_all, ids, y_instances, bag_fu = test(testloader, model, args)
             # uncertainity = get_uncertainity(testloader, model, args)
             uncertainity = 0
-            # print(f'Epoch: {epoch}, Train error: {train_error:.4f}, '
-                # f'Test error: {test_error:.4f}, Train_AUC: {train_auc:.4f}, Test_AUC: {auc:.4f}')
             wandb.log({"train_error": train_error, "test_error": test_error, "train_auc": train_auc, "test_auc": auc, "epoch": epoch})
             if epoch == args.epochs:
                 aucs_last.append(auc)
@@ -230,10 +215,6 @@ for seed in range(args.seed,args.seed+args.n_runs):
     #Save memory
     with open("./results/memory_auc_cindex_2.npy","wb") as file:
         np.save(file,memory)
-    # random.seed(run)
-    # np.random.seed(run)
-    # kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
-    # fold_splits = list(kf.split(X,y))
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
     #Get K worst samples
@@ -247,7 +228,6 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.subplot(1,2,1)
     sns.histplot(memory)
     plt.subplot(1,2,2)
-    # plt.scatter(np.arange(num_examples),memory)
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(jianan_indices,memory[jianan_indices])
     plt.legend(["other","jianan"])
