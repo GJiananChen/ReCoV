@@ -340,7 +340,7 @@ class MultiFocalRegBags(data_utils.Dataset):
         label = max(self.labels_list[index])
         bag_nm = self.bags_nm_list[index]
         bag_fu = max(self.bags_fu_list[index])
-        return bag, label, bag_nm, bag_fu
+        return bag, label, bag_nm, bag_fu, index
 
 class MnistRegBags(data_utils.Dataset):
     def __init__(self, mean_bag_length=10, var_bag_length=2, num_bag=250, seed=1, train=True):

@@ -38,7 +38,7 @@ def get_parser():
                         help='subset of dataset to use')
     parser.add_argument('--folds', default=5, type=int,
                         help='number of folds for cross validation')
-    parser.add_argument('--n_runs', default=500, type=int,
+    parser.add_argument('--n_runs', default=50, type=int,
                         help='number of runs for repeated validation')
     parser.add_argument('--censor',
                         default=730,
@@ -103,7 +103,7 @@ def train(epoch, train_loader, model, optimizer, args):
     criterion = NegativeLogLikelihood().cuda()
 
     # training
-    for batch_idx, (data, bag_label, bag_id, bag_fu) in enumerate(train_loader):
+    for batch_idx, (data, bag_label, bag_id, bag_fu,index) in enumerate(train_loader):
         data = torch.stack(data).squeeze().float()
         if args.cuda:
             data, bag_label, bag_fu = data.cuda(), bag_label.cuda(), bag_fu.cuda()
@@ -151,7 +151,7 @@ def test(test_loader, model, args):
     criterion = NegativeLogLikelihood().cuda()
     with torch.no_grad():
         # testing
-        for batch_idx, (data, bag_label, bag_id, bag_fu) in enumerate(test_loader):
+        for batch_idx, (data, bag_label, bag_id, bag_fu, index) in enumerate(test_loader):
             data = torch.stack(data).squeeze().float()
             if args.cuda:
                 data, bag_label, bag_fu = data.cuda(), bag_label.cuda(), bag_fu.cuda()
@@ -167,7 +167,8 @@ def test(test_loader, model, args):
 
             # y_trues.append(bag_label.max().cpu().item())
             # y_preds.append(y_prob.cpu().item())
-            ids.append(bag_id[0][0])
+            # ids.append(bag_id[0][0])
+            ids.extend(index.cpu().numpy())
             test_error += error
 
             # if batch_idx < 5:  # plot bag labels and instance labels for first 5 bags

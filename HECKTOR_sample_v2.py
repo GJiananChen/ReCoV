@@ -84,20 +84,21 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     # aucsweights = np.linspace(0,1,n_folds)
     # weights_auc = aucsweights[np.argsort(aucs)]
     # weights_auc = np.max(aucs)/aucs
-    weights_auc = np.max(aucs) - aucs
-    weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    # weights_auc = np.max(aucs) - aucs
+    # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    weights_auc = aucs
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
 
     # con_metrics_all = []
     # for i in range(n_folds):
         # con_metrics_all.append(concordance_indvidual(-risk_pred_all[i],bag_fu_all[i], bag_labels[i]))
-
     # con_metrics_all = np.concatenate(con_metrics_all)
     # weights_like = 1 - (con_metrics_all.max() - con_metrics_all)
+    
     weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
 
     # weights = 7*weights_auc + weights_like
-    weights = weights_like
+    weights = weights_auc + 2*weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
@@ -194,6 +195,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
             batch_size=1, sampler=test_subsampler, drop_last=False)
 
         # print('Init Model')
+        # model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=False, p = 0.2)
         model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=True, p = 0.2)
         if args.cuda:
             model.cuda()
@@ -222,6 +224,9 @@ for seed in range(args.seed,args.seed+args.n_runs):
                 uncertainity_all.append(uncertainity)
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
+    #Save memory
+    with open("memory_auc_uncertainity.npy","wb") as file:
+        np.save(file,memory)
     # random.seed(run)
     # np.random.seed(run)
     # kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
@@ -230,14 +235,23 @@ for seed in range(args.seed,args.seed+args.n_runs):
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
     #Get K worst samples
     identified = np.argsort(memory)[:TOP_K]
+    # jianan_indices = [16, 87, 135, 150, 180, 262, 269, 303, 365, 370, 372]
+    jianan_indices = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
+    all_indices = np.arange(num_examples)
+    other_indicies = np.array(list(set(all_indices) - set(jianan_indices)))
     print(aucs_last)
     print(np.sort(identified))
     fig = plt.figure()
     plt.subplot(1,2,1)
     sns.histplot(memory)
     plt.subplot(1,2,2)
-    plt.scatter(np.arange(num_examples),memory)
-    plt.savefig("./hecktor_weights.png")
+    # plt.scatter(np.arange(num_examples),memory)
+    plt.scatter(other_indicies,memory[other_indicies])
+    plt.scatter(jianan_indices,memory[jianan_indices])
+    plt.legend(["other","jianan"])
+    # plt.savefig("./hecktor_weights_cindex_v2.png")
+    plt.savefig("./hecktor_weights_uncert_v2.png")
+
 
     # aucs_best= []
     # for fold, (train_ids, test_ids) in enumerate(kfold.split(dataset, labels)):

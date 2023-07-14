@@ -34,9 +34,9 @@ def concordance_indvidual(risk_pred_all,bag_fu_all, bag_labels):
     # T1=T2 = 0
     # X1>=X2 and T1>T2 = -1
     # Sample is valid if neither t1,t2 are censored or if t1 is censored after t2
-    risk_pred_all = risk_pred_all.ravel().cpu().numpy()
-    bag_fu_all = bag_fu_all.ravel().cpu().numpy()
-    bag_labels = bag_labels.ravel().cpu().numpy()
+    risk_pred_all = risk_pred_all.ravel()
+    bag_fu_all = bag_fu_all.ravel()
+    bag_labels = bag_labels.ravel()
 
     n = len(risk_pred_all)
     con_matrix = np.zeros((n,n))
@@ -78,26 +78,30 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     n_folds = len(aucs)
     number_ids = [len(i) for i in test_ids]
     test_ids_all = np.concatenate(test_ids)
-    uncertainity_all = np.concatenate(uncertainity_all)
+    # uncertainity_all = np.concatenate(uncertainity_all)
     # pred_probs_all = np.concatenate(pred_probs)
     # test_labels_all = np.concatenate(test_labels)
     # aucsweights = np.linspace(0,1,n_folds)
     # weights_auc = aucsweights[np.argsort(aucs)]
     # weights_auc = np.max(aucs)/aucs
-    weights_auc = np.max(aucs) - aucs
-    weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    # weights_auc = np.max(aucs) - aucs
+    # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    weights_auc = aucs
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
 
     # con_metrics_all = []
     # for i in range(n_folds):
         # con_metrics_all.append(concordance_indvidual(-risk_pred_all[i],bag_fu_all[i], bag_labels[i]))
-
     # con_metrics_all = np.concatenate(con_metrics_all)
     # weights_like = 1 - (con_metrics_all.max() - con_metrics_all)
-    weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
+    
+    con_metrics_all = concordance_indvidual(-np.concatenate(risk_pred_all),np.concatenate(bag_fu_all),np.concatenate(bag_labels))
+    weights_like = con_metrics_all.copy()
+    
+    # weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
 
     # weights = 7*weights_auc + weights_like
-    weights = weights_like
+    weights = 3*weights_auc + weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
@@ -194,7 +198,8 @@ for seed in range(args.seed,args.seed+args.n_runs):
             batch_size=1, sampler=test_subsampler, drop_last=False)
 
         # print('Init Model')
-        model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=True, p = 0.2)
+        model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=False, p = 0.2)
+        # model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=True, p = 0.2)
         if args.cuda:
             model.cuda()
 
@@ -208,20 +213,23 @@ for seed in range(args.seed,args.seed+args.n_runs):
         for epoch in range(1, args.epochs + 1):
             train_error, train_loss, train_auc = train(epoch, trainloader, model, optimizer, args)
             test_error, test_loss, auc, bag_label_all, risk_pred_all, ids, y_instances, bag_fu = test(testloader, model, args)
-            uncertainity = get_uncertainity(testloader, model, args)
-            # uncertainity = 0
+            # uncertainity = get_uncertainity(testloader, model, args)
+            uncertainity = 0
             # print(f'Epoch: {epoch}, Train error: {train_error:.4f}, '
                 # f'Test error: {test_error:.4f}, Train_AUC: {train_auc:.4f}, Test_AUC: {auc:.4f}')
             wandb.log({"train_error": train_error, "test_error": test_error, "train_auc": train_auc, "test_auc": auc, "epoch": epoch})
             if epoch == args.epochs:
                 aucs_last.append(auc)
-                bag_fu_all.append(bag_fu)
+                bag_fu_all.append(bag_fu.cpu().numpy())
                 test_ids_weight.append(ids)
-                risk_all.append(risk_pred_all)
-                bag_labels.append(bag_label_all)
+                risk_all.append(risk_pred_all.cpu().numpy())
+                bag_labels.append(bag_label_all.cpu().numpy())
                 uncertainity_all.append(uncertainity)
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
+    #Save memory
+    with open("./results/memory_auc_cindex_2.npy","wb") as file:
+        np.save(file,memory)
     # random.seed(run)
     # np.random.seed(run)
     # kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
@@ -230,40 +238,20 @@ for seed in range(args.seed,args.seed+args.n_runs):
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
     #Get K worst samples
     identified = np.argsort(memory)[:TOP_K]
+    jianan_indices = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
+    all_indices = np.arange(num_examples)
+    other_indicies = np.array(list(set(all_indices) - set(jianan_indices)))
     print(aucs_last)
-    print(np.sort(identified))
+    print(identified)
     fig = plt.figure()
     plt.subplot(1,2,1)
     sns.histplot(memory)
     plt.subplot(1,2,2)
-    plt.scatter(np.arange(num_examples),memory)
-    plt.savefig("./hecktor_weights.png")
+    # plt.scatter(np.arange(num_examples),memory)
+    plt.scatter(other_indicies,memory[other_indicies])
+    plt.scatter(jianan_indices,memory[jianan_indices])
+    plt.legend(["other","jianan"])
+    plt.savefig("./results/hecktor_weights_cindex_v3.png")
 
-    # aucs_best= []
-    # for fold, (train_ids, test_ids) in enumerate(kfold.split(dataset, labels)):
-    #     # Print
-    #     print(f'Run {seed}, FOLD {fold}')
-    #     print('--------------------------------')
-    #     test_subsampler = SubsetRandomSampler(test_ids)
-    #     testloader = data_utils.DataLoader(
-    #         dataset,
-    #         batch_size=1, sampler=test_subsampler, drop_last=False)
-
-    #     print('Init Model')
-    #     model = MIL_reg_Ins(args.pooling, n_input=features.shape[1] )
-    #     if args.cuda:
-    #         model.cuda()
-
-    # for fold, (train_ids, test_ids) in enumerate(kfold.split(dataset, labels)):
-    #     test_ids_all.append(test_ids)
-    #     print(test_ids)
-    # candidates = test_ids_all[smallest_index(aucs_last)]
-    # all_candidates.append(candidates)
-
-    # wandb.log_artifact(artifact)
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
-
-# # save sample ids that belongs to the worst folds across runs
-# with open(f'{args.dataset}_{seed}_{seed+args.n_runs}.pkl', 'wb') as f:
-#     pickle.dump(all_candidates, f)
 

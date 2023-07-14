@@ -139,9 +139,13 @@ class MINN(nn.Module):
 # current best model
 # tried batchnorm but it's normalizing instances instead of batches
 class MIL_reg_Ins(nn.Module):
-    def __init__(self, pooling='mean', n_input=128, activation='ReLU'):
+    def __init__(self, pooling='mean', n_input=128, activation='ReLU', apply_dropout=False, p = 0.3):
         super(MIL_reg_Ins, self).__init__()
         self.pooling = pooling
+        if apply_dropout:
+            self.dropout = torch.nn.Dropout(p=p)
+        else:
+            self.dropout = torch.nn.Identity()
         if activation == 'SELU':
             act_fun = nn.SELU()
         else:
@@ -151,23 +155,27 @@ class MIL_reg_Ins(nn.Module):
             torch.nn.LayerNorm([128]),
             # torch.nn.BatchNorm1d(128),
             act_fun,
+            self.dropout,
             nn.Linear(128, 64),
             torch.nn.LayerNorm([64]),
             # torch.nn.BatchNorm1d(64),
             act_fun,
-
+            self.dropout,
             nn.Linear(64, 32),
             torch.nn.LayerNorm([32]),
             # torch.nn.BatchNorm1d(32),
             act_fun,
+            self.dropout,
             nn.Linear(32, 32),
             torch.nn.LayerNorm([32]),
             # torch.nn.BatchNorm1d(32),
             act_fun,
+            self.dropout,
             nn.Linear(32, 32),
             torch.nn.LayerNorm([32]),
             # torch.nn.BatchNorm1d(32),
             act_fun,
+            self.dropout,
         )
 
         self.classifier = nn.Sequential(
