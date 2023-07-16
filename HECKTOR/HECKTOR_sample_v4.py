@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parent.parent)
+
 import numpy as np
 import pandas as pd
 import os
@@ -220,7 +224,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open("./results/memory_auc_cindex_5.npy","wb") as file:
+    with open("../results/memory_auc_cindex_5.npy","wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
@@ -238,7 +242,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(jianan_indices,memory[jianan_indices])
     plt.legend(["other","jianan"])
-    plt.savefig("./results/hecktor_weights_cindex_v5.png")
+    plt.savefig("../results/hecktor_weights_cindex_v5.png")
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 

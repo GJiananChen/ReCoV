@@ -15,17 +15,17 @@ class AMINNDataset:
 
     def get_csv(self):
         if self.data == 'liver':
-            self.data_csv = './data/liver_1.5mm.csv'
-            self.cli_csv = './data/GadClinicalInfo.csv'
+            self.data_csv = '../data/liver_1.5mm.csv'
+            self.cli_csv = '../data/GadClinicalInfo.csv'
         elif self.data == 'hn':
-            self.data_csv = './data/HN_multi.csv'
-            self.cli_csv = './data/HN_clinical.csv'
+            self.data_csv = '../data/HN_multi.csv'
+            self.cli_csv = '../data/HN_clinical.csv'
         elif self.data == 'hn_simulation':
-            self.data_csv = './data/HN_multi.csv'
-            self.cli_csv = './data/HN_clinical_simulation.csv'
+            self.data_csv = '../data/HN_multi.csv'
+            self.cli_csv = '../data/HN_clinical_simulation.csv'
         elif self.data == 'lung':
-            self.data_csv = './data/Lung_multi.csv'
-            self.cli_csv = './data/Lung_clinical.csv'
+            self.data_csv = '../data/Lung_multi.csv'
+            self.cli_csv = '../data/Lung_clinical.csv'
         elif self.data == 'hecktor':
             # self.data_csv = './data/HECKTOR_multi_2.csv'
             # self.data_csv = './data/HECKTOR_multi.csv'

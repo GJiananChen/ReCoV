@@ -7,6 +7,9 @@ Observations:
 5. Lower Tau leads to faster convergence but also leads to rigidness of folds
 6. High regularization and low Tau leads to subsequent decrease in performace
 '''
+import sys
+from pathlib import Path
+sys.path.append(Path(__file__).parent.parent)
 
 import os
 import warnings
@@ -99,7 +102,7 @@ TAU = 0.1
 random.seed(1)
 np.random.seed(1)
 
-mushroom = pd.read_csv(r'./data/mushrooms.csv')
+mushroom = pd.read_csv(r'../data/mushrooms.csv')
 
 cols = mushroom.columns.to_list()
 cols.remove('class')
