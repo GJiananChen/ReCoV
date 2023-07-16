@@ -72,7 +72,7 @@ def concordance_indvidual(risk_pred_all,bag_fu_all, bag_labels):
      
 def auc_weight_function(auc_val):
     #0.5 is random hence easily achievable
-    weight = np.exp**(2.5*(auc_val - 0.5))
+    weight = np.exp(2.5*(auc_val - 0.5))
     #the val of weight will be 1 we debias it with exp**(-0.3)
     weight = weight - 0.6
     return weight
@@ -87,7 +87,7 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     test_ids_all = np.concatenate(test_ids)
     # uncertainity_all = np.concatenate(uncertainity_all)
 
-    weights_auc = aucs
+    weights_auc = auc_weight_function(np.array(aucs))
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
     
     con_metrics_all = concordance_indvidual(-np.concatenate(risk_pred_all),np.concatenate(bag_fu_all),np.concatenate(bag_labels))
@@ -220,7 +220,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open("./results/memory_auc_cindex_5.npy","wb") as file:
+    with open("./results/memory_auc_cindex_6.npy","wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
@@ -238,7 +238,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(jianan_indices,memory[jianan_indices])
     plt.legend(["other","jianan"])
-    plt.savefig("./results/hecktor_weights_cindex_v5.png")
+    plt.savefig("./results/hecktor_weights_cindex_v6.png")
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 

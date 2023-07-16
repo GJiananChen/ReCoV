@@ -70,18 +70,19 @@ def train(epoch, train_loader):
     risk_pred_all = []
     bag_fu_all = []
 
-    # No method: 0.545863453815261 ± 0.01993910181439524
-    # Jianan's method : 0.6070682730923694 ± 0.009657277664378548
-    # Test performace: 0.6019277108433734 ± 0.051782254806761484
     
-    # exclusion = ['MDA-159', 'MDA-151', 'MDA-054', 'CHUV-049', 'CHUS-080', 'HGJ-052', 'MDA-013', 'HGJ-078', 'HGJ-086', 'CHUP-073', 'HMR-012']
-    # exclusion = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
-    # exclusion = ['MDA-017', 'CHUV-017', 'MDA-141', 'MDA-194', 'MDA-054','CHUM-039', 'MDA-019', 'MDA-046', 'CHUM-053', 'CHUS-049','MDA-013', 'MDA-076', 'CHUS-007', 'MDA-116', 'CHUM-061']
-    # exclusion_sv = [ 30,  50, 132, 183, 192, 338]
-    # exclusion_sv = ['CHUS-100', 'MDA-190', 'MDA-140', 'MDA-020', 'CHUM-038', 'CHUP-036']
+    # No method: 0.545863453815261 ± 0.01993910181439524
     # exclusion = []
-    exclusion = [111 , 34 ,173 , 79, 215, 140, 283, 153 ,317 , 58 ,378  ,10 ,270  ,54 ,249 ,316 ,332 ,266, 149, 269]
-    # exclusion = ['CHUV-040', 'MDA-067', 'CHUM-021', 'HGJ-013']
+    # Jianan's method : 0.6070682730923694 ± 0.009657277664378548
+    # exclusion = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
+    # Test performace: 0.6019277108433734 ± 0.051782254806761484 - (2,1)
+    # exclusion = [111 , 34 ,173 , 79, 215, 140, 283, 153 ,317 , 58 ,378  ,10 ,270  ,54 ,249 ,316 ,332 ,266, 149, 269]
+    #Test performace: 0.6232931726907631 ± 0.015214471315728915 - (1.5, 1)
+    # exclusion = [173  ,54 , 76 , 10 ,269, 215, 316 ,324 ,111  ,58, 249 ,135 ,332 ,378, 208, 153, 113, 193, 79, 222]
+    #Test performnace: 0.6064257028112449 ± 0.04426570079529884 - Different auc calc, exponential weighting
+    # exclusion = [173 ,194 , 58 , 10 , 76 ,300 ,270,  79 ,269 ,149 , 55 , 72 ,235,362, 193, 241, 303, 317 ,50 ,249]
+    # Test performace: 0.61429718875502 ± 0.04313305362661224 - Repeat experiment with different seed
+    exclusion = [266 ,231, 316,  10, 215, 180,  16,  34, 194, 154, 173, 235 , 54 ,249, 269,   8,  12,  23, 245, 255]
     criterion = NegativeLogLikelihood().cuda()
 
     for batch_idx, (data, bag_label, bag_id, bag_fu, t_id) in enumerate(train_loader):
