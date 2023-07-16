@@ -246,56 +246,10 @@ if __name__ == '__main__':
                     # print(f'Model saved at epoch {epoch}.')
                     aucs_last.append(train_auc)
 
-
-                # model.save(os.path.join(wandb.run.dir, f'model_{fold}.h5'))
-                # print('Start Testing')
-                # _, _, auc, y_trues, y_probs, ids, y_instances = test(testloader)
-                # y_true_all.extend(y_trues)
-                # y_prob_all.extend(y_probs)
-                # y_instances_all.append(y_instances)
-                # ids_all.extend(ids)
-                # aucs.append(auc)
-            # print(y_trues)
-            # print(y_probs)
-            # print(ids)
-
-        # auc_stacked = roc_auc_score(y_true_all, y_prob_all)
-        # aucs_stacked.append(auc_stacked)
-        # print(aucs)
-        # table = wandb.Table(columns=['id', 'ytrue', 'yprob'])
-        # for i, v in enumerate(y_true_all):
-        #     table.add_data(ids_all[i], y_true_all[i], y_prob_all[i])
-        # artifact.add(table, f'{wandb.run.name}_preds_run{irun+1}')
-
-
-            # print('Init Model')
-            # model = MIL_reg_Ins(args.pooling, n_input=features.shape[1] )
-            # if args.cuda:
-                # model.cuda()
-
-            # model.load_state_dict(torch.load(os.path.join(wandb.run.dir, f'model_last_epoch.pt')))
-        test_error, test_loss, testauc, _, _, _, _ = test(testloader)
         testaucs_last.append(testauc)
         print("Train auc: {}".format(train_auc))
         print("Test auc: {}".format(testauc))
     print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_last),np.std(aucs_last)))
     print(u"Test performace: {} \u00B1 {}".format(np.mean(testaucs_last),np.std(testaucs_last)))
 
-    # y_pred_all = [int(x >= 0.5) for x in y_prob_all]
-    # acc = sum(1 for x,y in zip(y_pred_all,y_true_all) if x == y) / float(len(y_pred_all))
-    # print(f'Average AUC = {np.mean(aucs):.4f}, Acc =  {np.mean(acc):.4f}')
-    # wandb.log_artifact(artifact)
-    # wandb.log({"auc_average": np.mean(aucs)})
-    # wandb.log({"auc_std": np.std(aucs)})
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
-    # wandb.log({"best_aucs": aucs_best})
-    # wandb.log({"last_aucs": aucs_last})
-    # wandb.log({"auc_stacked": np.mean(aucs_stacked)})
-    # wandb.log({'acc': acc})
-    # df = pd.DataFrame({'ID'
-    # :ids_all, 'ytrue':y_true_all, 'yprob':y_prob_all})
-    # df.to_csv('hn_real_df_km_reg.csv')
-
-    # [0.6378205128205128, 0.45502998001332445, 0.42571618920719523, 0.6443994601889339, 0.5991902834008097]
-    #[0.6025641025641025, 0.49700199866755496, 0.44770153231179216, 0.5809716599190283, 0.5607287449392713]
-    # wandb.log({"auc_std": np.std(aucs_stacked})
