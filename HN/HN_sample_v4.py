@@ -2,27 +2,28 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+import random
+import csv
+import os
+import argparse
+import pickle
+
 import numpy as np
 import pandas as pd
-import os
 import wandb
-import argparse
 import torch
 import torch.utils.data as data_utils
 import torch.optim as optim
 from torch.autograd import Variable
 from sklearn.model_selection import StratifiedKFold
-from dataloader import AMINNDataset, MultiFocalBags, MultiFocalRegBags
-from model import  NegativeLogLikelihood, c_index, MIL_reg_Ins
 from torch.utils.data.sampler import SubsetRandomSampler
-import pickle
 from sklearn.metrics import roc_auc_score
-import csv
-import random
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from HECKTOR import train, test, set_seed, smallest_index, get_parser
+from HECKTOR.model import  NegativeLogLikelihood, c_index, MIL_reg_Ins
+from HECKTOR.dataloader import AMINNDataset, MultiFocalBags, MultiFocalRegBags
+from HECKTOR.HECKTOR import train, test, set_seed, smallest_index, get_parser
 from sample import sample_folds
 from uncertainity import dropout_uncertainity
 
@@ -76,7 +77,7 @@ def concordance_indvidual(risk_pred_all,bag_fu_all, bag_labels):
      
 def auc_weight_function(auc_val):
     #0.5 is random hence easily achievable
-    weight = np.exp**(2.5*(auc_val - 0.5))
+    weight = np.exp(2.5*(auc_val - 0.5))
     #the val of weight will be 1 we debias it with exp**(-0.3)
     weight = weight - 0.6
     return weight
@@ -133,10 +134,12 @@ def plot_weights(x,noise_labels):
     plt.savefig("temp.png")
 
 
-TOP_K = 20
+TOP_K = 10
 TAU = 1
 
 args = get_parser()
+args.dataset = "hn"
+args.censor = 1825
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
     print('\nGPU is ON!')
@@ -224,13 +227,13 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open("../results/memory_auc_cindex_5.npy","wb") as file:
+    with open("../results/memory_auc_cindex_hn_v1.npy","wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
     #Get K worst samples
     identified = np.argsort(memory)[:TOP_K]
-    jianan_indices = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
+    jianan_indices = [45,101,113]
     all_indices = np.arange(num_examples)
     other_indicies = np.array(list(set(all_indices) - set(jianan_indices)))
     print(aucs_last)
@@ -242,7 +245,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(jianan_indices,memory[jianan_indices])
     plt.legend(["other","jianan"])
-    plt.savefig("../results/hecktor_weights_cindex_v5.png")
+    plt.savefig("../results/hn_v1.png")
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 

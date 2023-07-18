@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 import numpy as np
 import pandas as pd
@@ -23,7 +24,6 @@ from scipy.stats import binom
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import accuracy_score, roc_auc_score, auc
@@ -56,8 +56,9 @@ def threshold_indice(lst, threshold=0.5):
     return [x[0] for x in enumerate(lst) if x[1] < threshold]
 
 if __name__ == '__main__':
-    cifar10n_pt = './data/CIFAR-N/CIFAR-10_human.pt'
-    cifar_h5 = r'./data/cifar_feats.h5'
+    file_loc = Path(__file__).resolve().parent.parent
+    cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
+    cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
 
     noise_file = torch.load(cifar10n_pt)
     clean_label = noise_file['clean_label']

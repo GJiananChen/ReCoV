@@ -1,5 +1,6 @@
 """Pytorch dataset object that loads MNIST dataset as bags."""
 
+from pathlib import Path
 import numpy as np
 import torch
 import torch.utils.data as data_utils
@@ -7,37 +8,40 @@ from torchvision import datasets, transforms
 from utils import create_lung_df, create_hn_df, create_liver_df, feature_sets_lung, feature_sets_hn, feature_sets_liver
 import pandas as pd
 
+file_loc = Path(__file__).resolve().parent.parent
+
 class AMINNDataset:
-    def __init__(self, data='liver', censor=0, subset='multi'):
+    def __init__(self, data='liver', censor=0, subset='multi',exclusion=[]):
         self.data = data
+        self.exclusion = exclusion
         # self.censor = censor
         # self.subset = subset
 
     def get_csv(self):
         if self.data == 'liver':
-            self.data_csv = '../data/liver_1.5mm.csv'
-            self.cli_csv = '../data/GadClinicalInfo.csv'
+            self.data_csv = str(file_loc / 'data/liver_1.5mm.csv')
+            self.cli_csv = str(file_loc / 'data/GadClinicalInfo.csv')
         elif self.data == 'hn':
-            self.data_csv = '../data/HN_multi.csv'
-            self.cli_csv = '../data/HN_clinical.csv'
+            self.data_csv = str(file_loc / 'data/HN_multi.csv')
+            self.cli_csv = str(file_loc / 'data/HN_clinical.csv')
         elif self.data == 'hn_simulation':
-            self.data_csv = '../data/HN_multi.csv'
-            self.cli_csv = '../data/HN_clinical_simulation.csv'
+            self.data_csv = str(file_loc / 'data/HN_multi.csv')
+            self.cli_csv = str(file_loc / 'data/HN_clinical_simulation.csv')
         elif self.data == 'lung':
-            self.data_csv = '../data/Lung_multi.csv'
-            self.cli_csv = '../data/Lung_clinical.csv'
+            self.data_csv = str(file_loc / 'data/Lung_multi.csv')
+            self.cli_csv = str(file_loc / 'data/Lung_clinical.csv')
         elif self.data == 'hecktor':
             # self.data_csv = './data/HECKTOR_multi_2.csv'
             # self.data_csv = './data/HECKTOR_multi.csv'
             # self.data_csv = './data/HECKTOR_train_all_setting2.csv'
-            self.data_csv = './data/HECKTOR_train_all_setting2.csv'
-            self.cli_csv = r'./data/hecktor2022_endpoint_training.csv'
+            self.data_csv = str(file_loc / 'data/HECKTOR_train_all_setting2.csv')
+            self.cli_csv = str(file_loc / 'data/hecktor2022_endpoint_training.csv')
         elif self.data == 'hecktor_train':
-            self.data_csv = './data/HECKTOR_train_train_setting2.csv'
-            self.cli_csv = r'./data/hecktor2022_endpoint_training.csv'
+            self.data_csv = str(file_loc / 'data/HECKTOR_train_train_setting2.csv')
+            self.cli_csv = str(file_loc / 'data/hecktor2022_endpoint_training.csv')
         elif self.data == 'hecktor_test':
-            self.data_csv = './data/HECKTOR_train_test_setting2.csv'
-            self.cli_csv = r'./data/hecktor2022_endpoint_training.csv'
+            self.data_csv = str(file_loc / 'data/HECKTOR_train_test_setting2.csv')
+            self.cli_csv = str(file_loc / 'data/hecktor2022_endpoint_training.csv')
         else:
             print('dataset not supported')
             self.data_csv = None
@@ -115,9 +119,9 @@ class AMINNDataset:
             self.subdf = self.subdf
         elif subset == 'primary':
             self.subdf = self.subdf[primary_idx]
-        # elif subset == 'outlier_removed':
-        #     outlier_index = [9,  18,  20,  22,  45,  55,  87,  99, 113]
-        #     self.subdf = self.subdf[~outlier_index]
+        elif subset == 'outlier_removed':
+            temp = set(np.arange(len(self.subdf)))
+            self.subdf = self.subdf.iloc[list(temp-set(self.exclusion))]
         else:
             print("Supported subsets are uni, multi, largest, all, primary and multi_largest")
 

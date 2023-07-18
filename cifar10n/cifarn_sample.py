@@ -7,13 +7,16 @@ Observations:
 5. Lower Tau leads to faster convergence but also leads to rigidness of folds
 6. High regularization and low Tau leads to subsequent decrease in performace
 '''
-
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 import os
 import warnings
 warnings.filterwarnings("ignore")
 import random
-import torch
 import h5py
+
+import torch
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -21,16 +24,16 @@ from sklearn.model_selection import RepeatedKFold, KFold
 from sklearn.preprocessing import LabelEncoder
 from statsmodels.stats.multitest import multipletests
 from scipy.stats import binom
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.ensemble import RandomForestClassifier
-# from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, roc_auc_score, auc
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as ticker
 from sklearn.ensemble import RandomForestClassifier
+
 from sample import sample_folds
+
+file_loc = Path(__file__).resolve().parent.parent
 
 def train_one_run(fold_splits):
     accs = []
@@ -39,7 +42,8 @@ def train_one_run(fold_splits):
     test_labels = []
     for fold, (train, test) in enumerate(fold_splits):
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train].to_list(), y.iloc[test].to_list()
-        rf = RandomForestClassifier(n_jobs=-1)
+        # rf = RandomForestClassifier(n_jobs=-1)
+        rf = LogisticRegression()
         rf.fit(X_train, y_train)
         y_pred = rf.predict(X_test)
         probs = rf.predict_proba(X_test)
@@ -51,6 +55,13 @@ def train_one_run(fold_splits):
         pred_probs.append(probs)
         test_labels.append(y_test)
     return accs, test_ids, pred_probs, test_labels
+
+def auc_weight_function(auc_val):
+    #0.5 is random hence easily achievable
+    weight = np.exp(3.5*(auc_val - 0.7))
+    #the val of weight will be 1 we debias it with exp**(-0.3)
+    weight = weight - 0.7
+    return weight
 
 def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     '''
@@ -65,8 +76,11 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     # aucsweights = np.linspace(0,1,n_folds)
     # weights_auc = aucsweights[np.argsort(aucs)]
     # weights_auc = np.max(aucs)/aucs
-    weights_auc = np.max(aucs) - aucs
-    weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    # weights_auc = np.max(aucs) - aucs
+    # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
+    # weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
+    weights_auc = 2*(np.array(aucs) - 0.5)
+    # weights_auc = auc_weight_function(np.array(aucs))
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
@@ -88,12 +102,14 @@ def plot_weights(x,noise_labels):
     x = x[sorting]
     x_clean = x[np.where(labels==0)[0]]
     x_noise = x[np.where(labels==1)[0]]
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    sns.histplot(x)
+    plt.subplot(1,2,2)
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig("temp.png")
-
-
+    plt.savefig(str(file_loc / "results/cifar_n_sample.png"))
 
 def closest_value(input_list, input_value):
     difference = lambda input_list: abs(input_list - input_value)
@@ -129,8 +145,9 @@ if __name__ == '__main__':
 
     random.seed(1)
     np.random.seed(1)
-    cifar10n_pt = './data/CIFAR-N/CIFAR-10_human.pt'
-    cifar_h5 = r'./data/cifar_feats.h5'
+    cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
+    cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
+
 
     noise_file = torch.load(cifar10n_pt)
     clean_label = noise_file['clean_label']
@@ -186,7 +203,7 @@ if __name__ == '__main__':
 
     fold_splits = list(kf.split(X, y))
     noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
-    gt = noisy
+    gt = np.where(np.array(noisy)==1)[0]
     memory = np.zeros_like(y)
 
     for run in range(N_RUNS):
@@ -220,7 +237,7 @@ if __name__ == '__main__':
 
     print(identified)
 
-    identified = np.argsort(memory)[:3000]
+    identified = np.argsort(memory)[:TOP_K]
     noise_file = torch.load(cifar10n_pt)
     clean_label = noise_file['clean_label']
     worst_label = noise_file['worse_label']
@@ -277,7 +294,8 @@ if __name__ == '__main__':
     np.random.seed(random_state)
     n_runs = 16000
 
-    rf = RandomForestClassifier(n_jobs=-1)
+    # rf = RandomForestClassifier(n_jobs=-1)
+    rf = LogisticRegression()
     print(f'--------Training RF model on noisy data')
     rf.fit(X, y)
 
@@ -286,7 +304,8 @@ if __name__ == '__main__':
     acc = accuracy_score(y_test, y_pred)
     print(f'ACC={acc*100:.3f}%')
 
-    rf = RandomForestClassifier(n_jobs=-1)
+    # rf = RandomForestClassifier(n_jobs=-1)
+    rf = LogisticRegression()
     print(f'--------Training RF model on cleaned data')
     rf.fit(X1, y1)
 
@@ -296,5 +315,5 @@ if __name__ == '__main__':
     print(f'ACC={acc*100:.3f}%')
 
     import pickle
-    with open(f'cifarn_sample_20runs.pkl', 'wb') as f:
-        pickle.dump(memory, f)
+    with open(str(file_loc/"results/memory_auc_cindex_hn_v2.npy"),"wb") as file:
+        np.save(file,memory)
