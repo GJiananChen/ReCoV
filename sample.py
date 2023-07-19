@@ -66,7 +66,8 @@ def sample_folds(n_folds:int, weights:np.array, tau:float) -> Tuple[List,Dict]:
     fold_id["rest"] = ordering[int(n_samples/n_folds):(n_folds-1)*int(n_samples/n_folds)]
     fold_id["worst"] = ordering[(n_folds-1)*int(n_samples/n_folds):]
     # Convert into train_test splits
-    rest_ids = np.random.permutation(fold_id["rest"])
+    # rest_ids = np.random.permutation(fold_id["rest"])
+    rest_ids = fold_id["rest"]
     rest_ids = [rest_ids[i*int(np.ceil(len(rest_ids)/(n_folds-2))):(i+1)*int(np.ceil(len(rest_ids)/(n_folds-2)))] for i in range(n_folds-2)]
     folds = [fold_id["best"]] + rest_ids + [fold_id["worst"]]
     fold_splits = []

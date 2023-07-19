@@ -79,13 +79,13 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     # weights_auc = np.max(aucs) - aucs
     # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
     # weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
-    weights_auc = 2*(np.array(aucs) - 0.5)
+    # weights_auc = 2*(np.array(aucs) - 0.5)
+    weights_auc = aucs
     # weights_auc = auc_weight_function(np.array(aucs))
     weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
     weights_like = 1 - (temp.max() - temp)
-    # weights = (weights_auc**80)*weights_like
     # weights = 1*weights_auc + weights_like
     weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
@@ -109,7 +109,7 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig(str(file_loc / "results/cifar_n_sample.png"))
+    plt.savefig(str(file_loc / "results/cifar_n_sample_worst.png"))
 
 def closest_value(input_list, input_value):
     difference = lambda input_list: abs(input_list - input_value)
@@ -139,7 +139,7 @@ def threshold_indice(lst, threshold=0.5):
     return [x[0] for x in enumerate(lst) if x[1] < threshold]
 
 if __name__ == '__main__':
-    N_RUNS = 10
+    N_RUNS = 20
     N_FOLDS = 5
     TAU = 0.1
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         X, X_test, y, y_test = f['train_feats'], f['test_feats'], f['train_labels'], f['test_labels']
         X, X_test, y, y_test = np.array(X), np.array(X_test), np.array(y), np.array(y_test)
 
-    NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
+    NOISE_TYPE = 'worst' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     if NOISE_TYPE == 'clean':
         y = clean_label
     elif NOISE_TYPE == 'aggre':
@@ -196,7 +196,9 @@ if __name__ == '__main__':
 
     all_candidates = np.array([], dtype='int')
 
-    TOP_K = 4000
+    # TOP_K = 4000
+    TOP_K = np.sum(noisy)
+    print(f"Number of noisy samples: {np.sum(noisy)}")
     random_state = 1
 
     kf = KFold(n_splits=N_FOLDS, random_state=random_state, shuffle=True)
@@ -220,6 +222,7 @@ if __name__ == '__main__':
         fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
         # Get K worst samples
         identified = np.argsort(memory)[:TOP_K]
+        # identified = np.where(memory<=0.2)[0]
         # Evaluate
         # gt = [x[0] for x in noisy]
         F = set(identified)
@@ -232,12 +235,13 @@ if __name__ == '__main__':
         # print(np.sort(np.array(list(F.intersection(G))))[:30])
         print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP, ER1, ER2))
 
-    plot_weights(memory, gt)
+        plot_weights(memory, gt)
 
 
     print(identified)
 
     identified = np.argsort(memory)[:TOP_K]
+    # identified = np.where(memory<=0.2)[0]
     noise_file = torch.load(cifar10n_pt)
     clean_label = noise_file['clean_label']
     worst_label = noise_file['worse_label']
@@ -250,7 +254,6 @@ if __name__ == '__main__':
         X, X_test, y, y_test = f['train_feats'], f['test_feats'], f['train_labels'], f['test_labels']
         X, X_test, y, y_test = np.array(X), np.array(X_test), np.array(y), np.array(y_test)
 
-    NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     if NOISE_TYPE == 'clean':
         y = clean_label
     elif NOISE_TYPE == 'aggre':
@@ -314,6 +317,5 @@ if __name__ == '__main__':
     acc = accuracy_score(y_test, y_pred)
     print(f'ACC={acc*100:.3f}%')
 
-    import pickle
-    with open(str(file_loc/"results/memory_auc_cindex_hn_v2.npy"),"wb") as file:
+    with open(str(file_loc/"results/memory_cifarn.npy"),"wb") as file:
         np.save(file,memory)

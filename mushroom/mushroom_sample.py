@@ -34,6 +34,8 @@ import matplotlib.ticker as ticker
 
 from sample import sample_folds
 
+file_loc = Path(__file__).resolve().parent.parent
+
 def train_one_run(fold_splits):
     aucs = []
     test_ids = []
@@ -41,7 +43,7 @@ def train_one_run(fold_splits):
     test_labels = []
     for fold, (train, test) in enumerate(fold_splits):
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train].to_list(), y.iloc[test].to_list()
-        lr = LogisticRegression(C = 0.001)
+        lr = LogisticRegression()
         lr.fit(X_train, y_train)
         y_pred = lr.predict(X_test)
         probs = lr.predict_proba(X_test)
@@ -90,10 +92,15 @@ def plot_weights(x,noise_labels):
     x = x[sorting]
     x_clean = x[np.where(labels==0)[0]]
     x_noise = x[np.where(labels==1)[0]]
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    sns.histplot(x)
+    plt.subplot(1,2,2)
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig("temp.png")
+    plt.savefig(str(file_loc / "results/mushroom_sample.png"))
+
 
 N_RUNS = 10
 NOISE_RATIO = 10
@@ -102,7 +109,7 @@ TAU = 0.1
 random.seed(1)
 np.random.seed(1)
 
-mushroom = pd.read_csv(r'../data/mushrooms.csv')
+mushroom = pd.read_csv(str(file_loc/'data/mushrooms.csv'))
 
 cols = mushroom.columns.to_list()
 cols.remove('class')
