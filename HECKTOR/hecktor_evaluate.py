@@ -82,7 +82,10 @@ def train(epoch, train_loader):
     #Test performnace: 0.6064257028112449 ± 0.04426570079529884 - Different auc calc, exponential weighting
     # exclusion = [173 ,194 , 58 , 10 , 76 ,300 ,270,  79 ,269 ,149 , 55 , 72 ,235,362, 193, 241, 303, 317 ,50 ,249]
     # Test performace: 0.61429718875502 ± 0.04313305362661224 - Repeat experiment with different seed
-    exclusion = [266 ,231, 316,  10, 215, 180,  16,  34, 194, 154, 173, 235 , 54 ,249, 269,   8,  12,  23, 245, 255]
+    # exclusion = [266 ,231, 316,  10, 215, 180,  16,  34, 194, 154, 173, 235 , 54 ,249, 269,   8,  12,  23, 245, 255]
+    
+    
+    
     criterion = NegativeLogLikelihood().cuda()
 
     for batch_idx, (data, bag_label, bag_id, bag_fu, t_id) in enumerate(train_loader):
@@ -210,9 +213,9 @@ if __name__ == '__main__':
             num_examples = len(dataset)
             labels = [x[0] for x in dataset.labels_list]
             # Start print
-            print('--------------------------------')
-            print(f'Run {irun}')
-            print('--------------------------------')
+            # print('--------------------------------')
+            # print(f'Run {irun}')
+            # print('--------------------------------')
 
             # Define data loaders for training and testing data in this fold
             trainloader = data_utils.DataLoader(
@@ -222,7 +225,7 @@ if __name__ == '__main__':
                 dataset_test,
                 batch_size=1, drop_last=False)
 
-            print('Init Model')
+            # print('Init Model')
             model = MIL_reg_Ins(args.pooling, n_input=features.shape[1])
             if args.cuda:
                 model.cuda()
@@ -230,7 +233,7 @@ if __name__ == '__main__':
             wandb.watch(model, log_freq=10)
             optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=args.reg)
 
-            print('Start Training')
+            # print('Start Training')
 
             best_auc = 0
             

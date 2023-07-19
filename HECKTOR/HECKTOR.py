@@ -10,8 +10,8 @@ import torch.utils.data as data_utils
 import torch.optim as optim
 from torch.autograd import Variable
 from sklearn.model_selection import StratifiedKFold
-from .dataloader import AMINNDataset, MultiFocalBags, MultiFocalRegBags
-from .model import  NegativeLogLikelihood, c_index, MIL_reg_Ins
+from dataloader import AMINNDataset, MultiFocalBags, MultiFocalRegBags
+from model import  NegativeLogLikelihood, c_index, MIL_reg_Ins
 from torch.utils.data.sampler import SubsetRandomSampler
 import pickle
 from sklearn.metrics import roc_auc_score

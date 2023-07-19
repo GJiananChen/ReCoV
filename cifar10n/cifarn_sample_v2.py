@@ -35,12 +35,16 @@ from sample import sample_folds
 
 file_loc = Path(__file__).resolve().parent.parent
 
-def train_one_run(fold_splits):
+def train_one_run(fold_splits, filter_noise=False, noisy_idx=[]):
     accs = []
     test_ids = []
     pred_probs = []
     test_labels = []
     for fold, (train, test) in enumerate(fold_splits):
+        if filter_noise and len(noisy_idx)>0:
+            #select 80% indice to drop randomly
+            drop_idx = np.random.permutation(noisy_idx)[:int(0.8*len(noisy_idx))]
+            train = list(set(train) - set(drop_idx))
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train].to_list(), y.iloc[test].to_list()
         # rf = RandomForestClassifier(n_jobs=-1)
         rf = LogisticRegression()
@@ -109,7 +113,7 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig(str(file_loc / f"results/cifar_n_sample_{NOISE_TYPE}_{TAU}.png"))
+    plt.savefig(str(file_loc / f"results/cifar_n_sample_{NOISE_TYPE}_{TAU}_v2.png"))
 
 def closest_value(input_list, input_value):
     difference = lambda input_list: abs(input_list - input_value)
@@ -207,10 +211,11 @@ if __name__ == '__main__':
     noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
     gt = np.where(np.array(noisy)==1)[0]
     memory = np.zeros_like(y)
+    identified = []
 
     for run in range(N_RUNS):
         # train for one run
-        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits)
+        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
         print(f"Iteration {run}: {aucs}")
         # rank the ids
         memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
@@ -317,5 +322,5 @@ if __name__ == '__main__':
     acc = accuracy_score(y_test, y_pred)
     print(f'ACC={acc*100:.3f}%')
 
-    with open(str(file_loc/ f"results/memory_cifarn_{NOISE_TYPE}_{TAU}.npy"),"wb") as file:
+    with open(str(file_loc/ f"results/memory_cifarn_{NOISE_TYPE}_{TAU}_v2.npy"),"wb") as file:
         np.save(file,memory)

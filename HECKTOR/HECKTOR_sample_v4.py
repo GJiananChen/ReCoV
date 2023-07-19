@@ -26,6 +26,8 @@ from HECKTOR import train, test, set_seed, smallest_index, get_parser
 from sample import sample_folds
 from uncertainity import dropout_uncertainity
 
+file_loc = Path(__file__).resolve().parent.parent
+
 def concordance_indvidual(risk_pred_all,bag_fu_all, bag_labels):
     '''
     Creates concordance metric consisting of each individual datapoint 
@@ -100,7 +102,9 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     # weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
 
     # weights = 3*weights_auc + weights_like
-    weights = 1.5*weights_auc + weights_like
+    # weights = 1.5*weights_auc + weights_like
+    # weights = 1*weights_auc + weights_like
+    weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
     # print(weights[gt])
@@ -118,23 +122,22 @@ def get_uncertainity(testloader, model, args):
             uncertainity.append(output_std)
     return torch.stack(uncertainity).cpu().numpy()
 
-def plot_weights(x,noise_labels):
-    labels = np.zeros_like(x)
-    labels[noise_labels] = 1
-    data_idx = np.arange(len(x))
-    sorting = np.argsort(x)
-    labels = labels[sorting]
-    x = x[sorting]
-    x_clean = x[np.where(labels==0)[0]]
-    x_noise = x[np.where(labels==1)[0]]
-    plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
-    plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
-    plt.legend(["clean","noise"])
-    plt.savefig("temp.png")
+def plot_weights(x,exp_name):
+    jianan_indices = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
+    all_indices = np.arange(len(x))
+    other_indicies = np.array(list(set(all_indices) - set(jianan_indices)))
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    sns.histplot(x)
+    plt.subplot(1,2,2)
+    plt.scatter(other_indicies,x[other_indicies])
+    plt.scatter(jianan_indices,x[jianan_indices])
+    plt.legend(["other","jianan"])
+    plt.savefig(str(file_loc / f"results/{exp_name}.png"))
 
 
 TOP_K = 20
-TAU = 1
+TAU = 0.4
 
 args = get_parser()
 if args.cuda:
@@ -159,6 +162,7 @@ fold_splits = list(kfold.split(dataset, labels))
 
 for seed in range(args.seed,args.seed+args.n_runs):
     set_seed(seed)
+    EXP_NAME = "cindex_04"
     wandb.config = vars(args)
     wandb.init(project="recov_hecktor",
                 config=wandb.config, 
@@ -224,25 +228,15 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open("../results/memory_auc_cindex_5.npy","wb") as file:
+    with open(str(file_loc / f"results/memory_{EXP_NAME}.npy"),"wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
     #Get K worst samples
     identified = np.argsort(memory)[:TOP_K]
-    jianan_indices = [10, 21, 58, 97, 135, 149, 163, 208, 235, 250, 269, 283, 285, 330, 358]
-    all_indices = np.arange(num_examples)
-    other_indicies = np.array(list(set(all_indices) - set(jianan_indices)))
     print(aucs_last)
     print(identified)
-    fig = plt.figure()
-    plt.subplot(1,2,1)
-    sns.histplot(memory)
-    plt.subplot(1,2,2)
-    plt.scatter(other_indicies,memory[other_indicies])
-    plt.scatter(jianan_indices,memory[jianan_indices])
-    plt.legend(["other","jianan"])
-    plt.savefig("../results/hecktor_weights_cindex_v5.png")
+    plot_weights(memory,EXP_NAME)
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 
