@@ -1,8 +1,11 @@
 from __future__ import print_function
+from pathlib import Path
+import os
+import sys
+sys.path.append(str(Path(__file__).resolve().parent))
 
 import numpy as np
 import pandas as pd
-import os
 import wandb
 import argparse
 import torch

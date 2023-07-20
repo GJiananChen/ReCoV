@@ -4,7 +4,6 @@ import random
 import numpy as np
 import pandas as pd
 import os
-import wandb
 import argparse
 import torch
 import torch.utils.data as data_utils
@@ -59,7 +58,7 @@ def smallest_index(lst):
 def threshold_indice(lst, threshold=0.5):
     return [x[0] for x in enumerate(lst) if x[1] < threshold]
 
-def train(epoch, train_loader):
+def train(epoch, train_loader, exclusion):
     model.train()
     train_loss = 0.
     train_error = 0.
@@ -83,9 +82,8 @@ def train(epoch, train_loader):
     # exclusion = [173 ,194 , 58 , 10 , 76 ,300 ,270,  79 ,269 ,149 , 55 , 72 ,235,362, 193, 241, 303, 317 ,50 ,249]
     # Test performace: 0.61429718875502 ± 0.04313305362661224 - Repeat experiment with different seed
     # exclusion = [266 ,231, 316,  10, 215, 180,  16,  34, 194, 154, 173, 235 , 54 ,249, 269,   8,  12,  23, 245, 255]
-    
-    
-    
+    # Test performace: 0.6359839357429719 ± 0.036644116107534846 (1,1) cindex+auc 0.5 sample_v2
+    # exclusion = [257, 241 , 72 ,316 , 54 ,324, 233 ,173 , 10 , 79 ,111  , 2 ,215 ,193 , 16, 149, 266 , 55 ,249 ,332]
     criterion = NegativeLogLikelihood().cuda()
 
     for batch_idx, (data, bag_label, bag_id, bag_fu, t_id) in enumerate(train_loader):
@@ -175,17 +173,14 @@ if __name__ == '__main__':
         # torch.cuda.manual_seed(args.seed)
         print('\nGPU is ON!')
 
-    wandb.config = vars(args)
-    # wandb.init(project="simulation_hn", entity="jiananchen", config=wandb.config, name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{args.seed}')
-    wandb.init(project="recov_hecktor",
-                config=wandb.config, 
-                name=f'{args.dataset}_{args.pooling}_{args.normalize}_{args.subset}_{args.censor}_{args.seed}',
-                # dir="/localdisk3/ramanav/Results/wandb",
-                mode="disabled")
-    # artifact = wandb.Artifact(f'{wandb.run.name}_preds', 'predictions')
-    
     aucs_last = []
     testaucs_last = []
+    
+    # with open("/home/ramanav/Projects/ReCoV/results/memory_cindex_only.npy","rb") as file:
+    with open("/home/ramanav/Projects/ReCoV/results/memory_cindex_1auc_0.5_1.npy","rb") as file:
+        memory = np.load(file)
+    exclusion = list(np.argsort(memory)[:20])
+    print(exclusion)
 
     for seeds in range(5):
         random_seed = args.seed + seeds
@@ -230,7 +225,6 @@ if __name__ == '__main__':
             if args.cuda:
                 model.cuda()
 
-            wandb.watch(model, log_freq=10)
             optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=args.reg)
 
             # print('Start Training')
@@ -238,21 +232,19 @@ if __name__ == '__main__':
             best_auc = 0
             
             for epoch in range(1, args.epochs + 1):
-                train_error, train_loss, train_auc = train(epoch, trainloader)
+                train_error, train_loss, train_auc = train(epoch, trainloader,exclusion)
                 test_error, test_loss, auc, _, _, _, _ = test(testloader)
                 # print(f'Epoch: {epoch}, Train error: {train_error:.4f}, '
                     # f'Test error: {test_error:.4f}, Train_AUC: {train_auc:.4f}, Test_AUC: {auc:.4f}')
-                wandb.log({"train_error": train_error, "test_error": test_error, "train_auc": train_auc, "test_auc": auc, "epoch": epoch})
                 if epoch == args.epochs:
                     best_auc = auc
                     # torch.save(model.state_dict(), os.path.join(wandb.run.dir, f'model_last_epoch.pt'))
                     # print(f'Model saved at epoch {epoch}.')
                     aucs_last.append(train_auc)
 
-        testaucs_last.append(testauc)
-        print("Train auc: {}".format(train_auc))
-        print("Test auc: {}".format(testauc))
+        testaucs_last.append(auc)
+        # print("Train auc: {}".format(train_auc))
+        # print("Test auc: {}".format(auc))
     print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_last),np.std(aucs_last)))
     print(u"Test performace: {} \u00B1 {}".format(np.mean(testaucs_last),np.std(testaucs_last)))
 
-    wandb.log({"last_aucs_average": np.mean(aucs_last)})

@@ -1,6 +1,9 @@
 """Pytorch dataset object that loads MNIST dataset as bags."""
-
+import sys
 from pathlib import Path
+file_loc = Path(__file__).resolve().parent.parent
+sys.path.append(str(file_loc))
+
 import numpy as np
 import torch
 import torch.utils.data as data_utils
@@ -8,7 +11,6 @@ from torchvision import datasets, transforms
 from utils import create_lung_df, create_hn_df, create_liver_df, feature_sets_lung, feature_sets_hn, feature_sets_liver
 import pandas as pd
 
-file_loc = Path(__file__).resolve().parent.parent
 
 class AMINNDataset:
     def __init__(self, data='liver', censor=0, subset='multi',exclusion=[]):

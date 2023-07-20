@@ -34,7 +34,12 @@ from uncertainity import dropout_uncertainity
 #jianan's indices: Test performace: 0.6232107843137256 ± 0.16471674363114716, seed 1234  0.6140604575163399 ± 0.0819084269107388
 # exclusion = [45, 101, 113]
 # hn_v4 Test performance: 0.6743218954248366 ± 0.13175441505066632 , seed 1234 0.681470588235294 ± 0.09958977275488806
-exclusion = [9,1,10,38]
+# exclusion = [9,1,10,38]
+
+with open("/home/ramanav/Projects/ReCoV/results/memory_cindex_1auc_0.5_1.npy","rb") as file:
+    memory = np.load(file)
+exclusion = list(np.argsort(memory)[:5])
+print(exclusion)
 
 args = get_parser()
 args.dataset = "hn"
