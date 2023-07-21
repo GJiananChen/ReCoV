@@ -43,7 +43,7 @@ def train_one_run(fold_splits, filter_noise=False, noisy_idx=[]):
     for fold, (train, test) in enumerate(fold_splits):
         if filter_noise and len(noisy_idx)>0:
             #select 80% indice to drop randomly
-            drop_idx = np.random.permutation(noisy_idx)[:int(0.8*len(noisy_idx))]
+            drop_idx = np.random.permutation(noisy_idx)[:int(NOISY_DROP*len(noisy_idx))]
             train = list(set(train) - set(drop_idx))
         X_train, X_test, y_train, y_test = X.iloc[train], X.iloc[test], y.iloc[train].to_list(), y.iloc[test].to_list()
         # rf = RandomForestClassifier(n_jobs=-1)
@@ -113,7 +113,7 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig(str(file_loc / f"results/cifar_n_sample_{NOISE_TYPE}_{TAU}_v2.png"))
+    plt.savefig(str(file_loc / f"results/cifar/cifar_n_sample_{NOISE_TYPE}_{TAU}_v2.png"))
 
 def closest_value(input_list, input_value):
     difference = lambda input_list: abs(input_list - input_value)
@@ -146,10 +146,18 @@ if __name__ == '__main__':
     N_RUNS = 20
     N_FOLDS = 5
     TAU = 0.1
-    NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
+    NOISE_TYPE = 'worst' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
+    RANDOM_STATE = 1
+    SUBSET_LENGTH = 50000
+    MEMORY_NOISE_THRES = 0.3
+    #Dropping bottom 5% of the dataset
+    NOISY_DROP = 0.25
 
-    random.seed(1)
-    np.random.seed(1)
+    if not (file_loc / "results/cifar").is_dir():
+        os.mkdir(file_loc / "results/cifar")
+
+    random.seed(RANDOM_STATE)
+    np.random.seed(RANDOM_STATE)
     cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
     cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
 
@@ -187,49 +195,34 @@ if __name__ == '__main__':
     y = pd.Series(y)
     y_test = pd.Series(y_test)
 
-    subset_length = 50000
-    noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
-    a, b = np.unique(y[:subset_length], return_counts=True)
-    print(b)
-    X = X[:subset_length]
-    y = y[:subset_length]
-
-    random_state = 1
-    random.seed(random_state)
-    np.random.seed(random_state)
-
-    all_candidates = np.array([], dtype='int')
-
-    # TOP_K = 4000
-    TOP_K = np.sum(noisy)
-    print(f"Number of noisy samples: {np.sum(noisy)}")
-    random_state = 1
-
-    kf = KFold(n_splits=N_FOLDS, random_state=random_state, shuffle=True)
-
-    fold_splits = list(kf.split(X, y))
-    noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
+    noisy = [0 if clean_label[x] == y[x] else 1 for x in range(SUBSET_LENGTH)]
     gt = np.where(np.array(noisy)==1)[0]
+    a, b = np.unique(y[:SUBSET_LENGTH], return_counts=True)
+    print(f"Labels distribution: {b}")
+    X = X[:SUBSET_LENGTH]
+    y = y[:SUBSET_LENGTH]
+
+    print(f"Number of noisy samples: {np.sum(noisy)}")
+
+    kf = KFold(n_splits=N_FOLDS, random_state=RANDOM_STATE, shuffle=True)
+    fold_splits = list(kf.split(X, y))
+
     memory = np.zeros_like(y)
     identified = []
 
     for run in range(N_RUNS):
         # train for one run
-        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
+        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=np.where(memory<=MEMORY_NOISE_THRES)[0])
         print(f"Iteration {run}: {aucs}")
         # rank the ids
         memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
-        # random.seed(run)
-        # np.random.seed(run)
-        # kf = KFold(n_splits=N_FOLDS, random_state=random_state,shuffle=True)
-        # fold_splits = list(kf.split(X,y))
         # Generate new set of folds based on weights
         fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
-        # Get K worst samples
-        identified = np.argsort(memory)[:TOP_K]
-        # identified = np.where(memory<=0.2)[0]
+        # Get K worst samples for dropping from training
+        # noise_set = np.argsort(memory)[:TOP_K]
+        identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+        print(f"Number of noise labels identified: {len(identified)}")
         # Evaluate
-        # gt = [x[0] for x in noisy]
         F = set(identified)
         G = set(range(0, len(y))) - set(gt)
         F_t = set(range(0, len(y))) - set(identified)
@@ -237,70 +230,27 @@ if __name__ == '__main__':
         ER1 = len(F.intersection(G)) / len(G)
         ER2 = len(F_t.intersection(M)) / len(M)
         NEP = len(F.intersection(M)) / len(F)
-        # print(np.sort(np.array(list(F.intersection(G))))[:30])
-        print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP, ER1, ER2))
+        F1 = len(F.intersection(M)) / (len(F.intersection(M)) + 0.5*(len(F.intersection(G))+len(F_t.intersection(M))))
+        print("F1 score: {}\nTrue noisy labels identified:{}\nFalse Positive: {}\nFalse Negative: {}".format(F1,NEP, ER1, ER2))
 
         plot_weights(memory, gt)
 
-
     print(identified)
 
-    identified = np.argsort(memory)[:TOP_K]
-    # identified = np.where(memory<=0.2)[0]
-    noise_file = torch.load(cifar10n_pt)
-    clean_label = noise_file['clean_label']
-    worst_label = noise_file['worse_label']
-    aggre_label = noise_file['aggre_label']
-    random_label1 = noise_file['random_label1']
-    random_label2 = noise_file['random_label2']
-    random_label3 = noise_file['random_label3']
+    identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    F = set(identified)
+    G = set(range(0, len(y))) - set(gt)
+    F_t = set(range(0, len(y))) - set(identified)
+    M = set(gt)
+    ER1 = len(F.intersection(G)) / len(G)
+    ER2 = len(F_t.intersection(M)) / len(M)
+    NEP = len(F.intersection(M)) / len(F)
+    print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP, ER1, ER2))
 
-    with h5py.File(cifar_h5, "r") as f:
-        X, X_test, y, y_test = f['train_feats'], f['test_feats'], f['train_labels'], f['test_labels']
-        X, X_test, y, y_test = np.array(X), np.array(X_test), np.array(y), np.array(y_test)
-
-    if NOISE_TYPE == 'clean':
-        y = clean_label
-    elif NOISE_TYPE == 'aggre':
-        y = aggre_label
-    elif NOISE_TYPE == 'random1':
-        y = random_label1
-    elif NOISE_TYPE == 'random2':
-        y = random_label2
-    elif NOISE_TYPE == 'random3':
-        y = random_label3
-    elif NOISE_TYPE == 'worst':
-        y = worst_label
-    else:
-        print('Noise type not recognized.')
-
-    X = pd.DataFrame(X)
-    X_test = pd.DataFrame(X_test)
-    y = pd.Series(y)
-    y_test = pd.Series(y_test)
-
-
-    subset_length = 50000
-    noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
-    a, b = np.unique(y[:subset_length], return_counts=True)
-    print(b)
-    X = X[:subset_length]
-    y = y[:subset_length]
-
-    target_indice = identified
-
-    X1 = np.delete(X.to_numpy(), target_indice, axis=0)
-    y1 = np.delete(y.to_numpy(), target_indice, axis=0)
+    X1 = np.delete(X.to_numpy(), identified, axis=0)
+    y1 = np.delete(y.to_numpy(), identified, axis=0)
     X1= pd.DataFrame(X1)
     y1 = pd.Series(y1)
-
-    # np.array(clean_label[target_indice])
-    # np.array(aggre_label[target_indice])
-
-    random_state = 1
-    random.seed(random_state)
-    np.random.seed(random_state)
-    n_runs = 16000
 
     # rf = RandomForestClassifier(n_jobs=-1)
     rf = LogisticRegression()
@@ -322,5 +272,5 @@ if __name__ == '__main__':
     acc = accuracy_score(y_test, y_pred)
     print(f'ACC={acc*100:.3f}%')
 
-    with open(str(file_loc/ f"results/memory_cifarn_{NOISE_TYPE}_{TAU}_v2.npy"),"wb") as file:
+    with open(str(file_loc/ f"results/cifar/memory_cifarn_{NOISE_TYPE}_{TAU}_v2.npy"),"wb") as file:
         np.save(file,memory)

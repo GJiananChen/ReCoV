@@ -132,14 +132,18 @@ def plot_weights(x,exp_name):
     plt.scatter(other_indicies,x[other_indicies])
     plt.scatter(jianan_indices,x[jianan_indices])
     plt.legend(["other","jianan"])
-    plt.savefig(str(file_loc / f"results/{exp_name}.png"))
+    plt.savefig(str(file_loc / f"results/HN/{exp_name}.png"))
 
+############################################################# PARAMETERS DEFINATION #######################################################################
 
-TOP_K = 6
+TOP_K = 5
 TAU = 0.5
 FILTER_DROP = True
-NOISY_DROP = 0.4
+NOISY_DROP = 0.5
 LAMDA = 1
+
+if not (file_loc / "results/HN").is_dir():
+    os.mkdir(file_loc / "results/HN")
 
 args = get_parser()
 args.dataset = "hn"
@@ -147,6 +151,8 @@ args.censor = 1825
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
     print('\nGPU is ON!')
+###########################################################################################################################################################
+
 
 all_candidates = []
 # For more information please check dataloader.py
@@ -237,7 +243,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open(str(file_loc / f"results/HN_memory_{EXP_NAME}.npy"),"wb") as file:
+    with open(str(file_loc / f"results/HN/HN_memory_{EXP_NAME}.npy"),"wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)

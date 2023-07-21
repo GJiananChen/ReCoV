@@ -30,13 +30,17 @@ from uncertainity import dropout_uncertainity
 
 #Indices to remove ( seed 1234 performs better)
 #Test performace: 0.6686601307189542 ± 0.155194161951401, seed 1234 0.6180228758169936 ± 0.09095581447193551
+# 0.6435915032679739 ± 0.01984427081441053 (5 seed average)
 # exclusion = []
 #jianan's indices: Test performace: 0.6232107843137256 ± 0.16471674363114716, seed 1234  0.6140604575163399 ± 0.0819084269107388
+# Test performace: 0.6501813725490195 ± 0.031708042150061025 (5 seed average)
 # exclusion = [45, 101, 113]
 # hn_v4 Test performance: 0.6743218954248366 ± 0.13175441505066632 , seed 1234 0.681470588235294 ± 0.09958977275488806
 # exclusion = [9,1,10,38]
+#Sample v2: 0.6877777777777778 ± 0.11261489118649662
+# Test performace: 0.6739019607843136 ± 0.017988091956047798 (5 seed average 1,1 cindex auc)
 
-with open("/home/ramanav/Projects/ReCoV/results/memory_cindex_1auc_0.5_1.npy","rb") as file:
+with open("/home/ramanav/Projects/ReCoV/results/HN_memory_HN_cindex_1auc_0.5_1.npy","rb") as file:
     memory = np.load(file)
 exclusion = list(np.argsort(memory)[:5])
 print(exclusion)
@@ -60,56 +64,58 @@ dataset = MultiFocalRegBags(features,labels)
 num_examples = len(dataset)
 labels = [x[0] for x in dataset.labels_list]
 # Define the K-fold Cross Validator
+aucs_train_seed = []
+aucs_test_seed = []
+for seeds in range(args.seed,args.seed+5):
+    set_seed(seeds)
+    # scripts for generating multiple instance survival regression datasets from radiomics spreadsheets
+    aucs_train = []
+    aucs_last = []
 
-set_seed(args.seed)
-# scripts for generating multiple instance survival regression datasets from radiomics spreadsheets
-aucs_train = []
-aucs_last = []
+    # Start print
+    print('--------------------------------')
+    print(f"Run {seeds}")
+    # K-fold Cross Validation model evaluation
+    kfold = StratifiedKFold(n_splits=args.folds, shuffle=True, random_state=args.seed)
+    fold_splits = list(kfold.split(dataset, labels))
+    for fold, (train_ids, test_ids) in enumerate(fold_splits):
+        # print(f'Run {seed}, FOLD {fold}')
+        # print('--------------------------------')
+        train_subsampler = SubsetRandomSampler(train_ids)
+        test_subsampler = SubsetRandomSampler(test_ids)
 
-# Start print
-print('--------------------------------')
-print(f"Run {args.seed}")
-# K-fold Cross Validation model evaluation
-kfold = StratifiedKFold(n_splits=args.folds, shuffle=True, random_state=args.seed)
-fold_splits = list(kfold.split(dataset, labels))
-for fold, (train_ids, test_ids) in enumerate(fold_splits):
-    # print(f'Run {seed}, FOLD {fold}')
-    # print('--------------------------------')
-    train_subsampler = SubsetRandomSampler(train_ids)
-    test_subsampler = SubsetRandomSampler(test_ids)
+        # Define data loaders for training and testing data in this fold
+        trainloader = data_utils.DataLoader(
+            dataset,
+            batch_size=1, sampler=train_subsampler, drop_last=False)
+        testloader = data_utils.DataLoader(
+            dataset,
+            batch_size=1, sampler=test_subsampler, drop_last=False)
 
-    # Define data loaders for training and testing data in this fold
-    trainloader = data_utils.DataLoader(
-        dataset,
-        batch_size=1, sampler=train_subsampler, drop_last=False)
-    testloader = data_utils.DataLoader(
-        dataset,
-        batch_size=1, sampler=test_subsampler, drop_last=False)
+        # print('Init Model')
+        model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=False, p = 0.2)
+        # model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=True, p = 0.2)
+        if args.cuda:
+            model.cuda()
 
-    # print('Init Model')
-    model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=False, p = 0.2)
-    # model = MIL_reg_Ins(args.pooling, n_input=features.shape[1], apply_dropout=True, p = 0.2)
-    if args.cuda:
-        model.cuda()
+        optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=args.reg)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=args.reg)
+        # print('Start Training')
 
-    # print('Start Training')
+        best_auc = 0
 
-    best_auc = 0
-
-    for epoch in range(1, args.epochs + 1):
-        train_error, train_loss, train_auc = train(epoch, trainloader, model, optimizer, args)
-        test_error, test_loss, auc, bag_label_all, risk_pred_all, ids, y_instances, bag_fu = test(testloader, model, args)
-        if epoch == args.epochs:
-            aucs_train.append(train_auc)
-            aucs_last.append(auc)
-    # aucs_train_seed.append(np.mean(aucs_train))
-    # aucs_test_seed.append(np.mean(aucs_last))
-    # print("Train auc: {}".format(aucs_train))
-    # print("Test auc: {}".format(aucs_last))
-# print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_train_seed),np.std(aucs_train_seed)))
-# print(u"Test performace: {} \u00B1 {}".format(np.mean(aucs_test_seed),np.std(aucs_test_seed)))
-print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_train),np.std(aucs_train)))
-print(u"Test performace: {} \u00B1 {}".format(np.mean(aucs_last),np.std(aucs_last)))
+        for epoch in range(1, args.epochs + 1):
+            train_error, train_loss, train_auc = train(epoch, trainloader, model, optimizer, args)
+            test_error, test_loss, auc, bag_label_all, risk_pred_all, ids, y_instances, bag_fu = test(testloader, model, args)
+            if epoch == args.epochs:
+                aucs_train.append(train_auc)
+                aucs_last.append(auc)
+    aucs_train_seed.append(np.mean(aucs_train))
+    aucs_test_seed.append(np.mean(aucs_last))
+    print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_train),np.std(aucs_train)))
+    print(u"Test performace: {} \u00B1 {}".format(np.mean(aucs_last),np.std(aucs_last)))
+        # print("Train auc: {}".format(aucs_train))
+        # print("Test auc: {}".format(aucs_last))
+print(u"Train performace: {} \u00B1 {}".format(np.mean(aucs_train_seed),np.std(aucs_train_seed)))
+print(u"Test performace: {} \u00B1 {}".format(np.mean(aucs_test_seed),np.std(aucs_test_seed)))
 
