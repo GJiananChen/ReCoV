@@ -149,9 +149,9 @@ if __name__ == '__main__':
     NOISE_TYPE = 'worst' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
-    MEMORY_NOISE_THRES = 0.3
+    MEMORY_NOISE_THRES = 0.5
     #Dropping bottom 5% of the dataset
-    NOISY_DROP = 0.25
+    NOISY_DROP = 0.8
 
     if not (file_loc / "results/cifar").is_dir():
         os.mkdir(file_loc / "results/cifar")
