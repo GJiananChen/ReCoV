@@ -118,7 +118,7 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig(str(file_loc / f"results/cifar/cifar_resnet_n_sample_{NOISE_TYPE}_{TAU}_v2.png"))
+    plt.savefig(str(file_loc / f"results/cifar/cifar_n_sample_{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v2.png"))
 
 def closest_value(input_list, input_value):
     difference = lambda input_list: abs(input_list - input_value)
@@ -163,6 +163,7 @@ if __name__ == '__main__':
     N_FOLDS = 5
     TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
+    FEAT = 'dinov2' # ['dinov2', 'imagenet', 'resnet']
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
     MEMORY_NOISE_THRES = 0.08
@@ -177,8 +178,15 @@ if __name__ == '__main__':
     random.seed(RANDOM_STATE)
     np.random.seed(RANDOM_STATE)
     cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
-    # cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
-    cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_resnet18.h5')
+
+    if FEAT == 'dinov2':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
+    elif FEAT == 'imagenet':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_imagenet.h5')
+    elif FEAT == 'resnet':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_resnet18.h5')
+    else:
+        print('Feature type not suppported.')
 
 
     noise_file = torch.load(cifar10n_pt)
@@ -390,5 +398,5 @@ if __name__ == '__main__':
     print(f'ACC={acc * 100:.3f}%')
     import pickle
 
-    with open(str(file_loc / f"results/cifar/memory_cifarn_resnet_{NOISE_TYPE}_{TAU}_v2.npy"), "wb") as file:
-        np.save(file, memory)
+    with open(str(file_loc / f"results/memory_cifar_{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v3.npy"), "wb") as file:
+        np.save(file, memory, allow_pickle=True)
