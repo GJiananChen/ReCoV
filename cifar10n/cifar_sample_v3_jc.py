@@ -95,11 +95,12 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
 
-    # preds = consistency_matrix.append(np.argmax(pred_probs_all,axis=1)[np.argsort(test_ids_all)])
-    # true = test_labels_all[np.argsort(test_ids_all)]
+    consistency_matrix.append(np.argmax(pred_probs_all,axis=1)[np.argsort(test_ids_all)])
+    prob_matrix.append(pred_probs_all[np.argsort(test_ids_all)])
+    true = test_labels_all[np.argsort(test_ids_all)]
 
     # print(weights[gt])
-    return memory
+    return memory, true
 
 def plot_weights(x,noise_labels):
     labels = np.zeros_like(x)
@@ -146,19 +147,28 @@ def smallest_index(lst):
 def threshold_indice(lst, threshold=0.5):
     return [x[0] for x in enumerate(lst) if x[1] < threshold]
 
+def consistency_metric():
+    b = []
+    for i in range(len(consistency_matrix.T)):
+        temp = np.unique(consistency_matrix[:,i],return_counts=True)
+        k = np.sort(temp[1])
+        b.append(np.sum(k[:-1]))
+    return np.array(b)
+
 consistency_matrix = []
+prob_matrix = []
 
 if __name__ == '__main__':
-    N_RUNS = 20
+    N_RUNS = 30
     N_FOLDS = 5
-    TAU = 0.6
+    TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
-    # MEMORY_NOISE_THRES = 0.05
+    MEMORY_NOISE_THRES = 0.08
     TOP_K = 3000
     #Dropping bottom 5% of the dataset
-    NOISY_DROP = 0.4
+    NOISY_DROP = 0.5
 
 
     if not (file_loc / "results/cifar").is_dir():
@@ -221,16 +231,18 @@ if __name__ == '__main__':
 
     for run in range(N_RUNS):
         # train for one run
+        # kf = KFold(n_splits=N_FOLDS, random_state=RANDOM_STATE+run, shuffle=True)
+        # fold_splits = list(kf.split(X, y))
         aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
         print(f"Iteration {run}: {aucs}")
         # rank the ids
-        memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
+        memory, true = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
         # Generate new set of folds based on weights
         fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
         # Get K worst samples for dropping from training
         # noise_set = np.argsort(memory)[:TOP_K]
-        identified = np.argsort(memory)[:TOP_K]
-        # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+        # identified = np.argsort(memory)[:TOP_K]
+        identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
         print(f"Number of noise labels identified: {len(identified)}")
         # Evaluate
         F = set(identified)
@@ -244,19 +256,34 @@ if __name__ == '__main__':
         print("F1 score: {}\nTrue noisy labels identified:{}\nFalse Positive: {}\nFalse Negative: {}".format(F1,NEP, ER1, ER2))
 
         plot_weights(memory, gt)
+    false_noisy = np.array(list(F.intersection(G)))
+    false_clean = np.array(list(F_t.intersection(M)))
+    true_noisy = np.array(list(F.intersection(M)))
+    fn_ord = false_noisy[np.argsort(memory[false_noisy])]
+    fc_ord = false_clean[np.argsort(memory[false_clean])]
+    tn_ord = true_noisy[np.argsort(memory[true_noisy])]
+    # def get_vals(idx):
+    #     print(consistency_matrix[:,idx])
+    #     print(f"given label: {true[idx]}")
+    #     print(f"clean label: {clean_label[idx]}")
+    consistency_matrix = np.array(consistency_matrix)
+    prob_matrix = np.stack(prob_matrix)
+    identified_old = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    # print(identified_old)
+    consistency_matrix = np.array(consistency_matrix)
+    prob_matrix = np.array(prob_matrix)
+    cons = consistency_metric()
+    identified = identified_old[np.where(cons[identified_old]<=1)[0]]
 
-    print(identified)
-
-    # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
-    identified = np.argsort(memory)[:TOP_K]
+    # identified = np.argsort(memory)[:TOP_K]
     # identified = np.argsort(memory)[:4505]
 
     F = set(identified)
     G = set(range(0, len(y))) - set(gt)
     F_t = set(range(0, len(y))) - set(identified)
     M = set(gt)
-    ER1 = len(F.intersection(G)) / len(G)
-    ER2 = len(F_t.intersection(M)) / len(M)
+    ER1 = len(F.intersection(G)) / len(G) #False noisy
+    ER2 = len(F_t.intersection(M)) / len(M) #False good
     NEP = len(F.intersection(M)) / len(F)
     print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP, ER1, ER2))
 

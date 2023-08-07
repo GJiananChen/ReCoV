@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
     for run in range(N_RUNS):
         # train for one run
-        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=np.where(memory<=MEMORY_NOISE_THRES)[0])
+        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
         print(f"Iteration {run}: {aucs}")
         # rank the ids
         memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)

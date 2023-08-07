@@ -102,7 +102,8 @@ def rank_weights(aucs, test_ids, risk_pred_all, bag_fu_all, bag_labels, uncertai
     # weights_like =  1 - (uncertainity_all - uncertainity_all.min())/(uncertainity_all.max()-uncertainity_all.min())
 
     # weights = 3*weights_auc + weights_like
-    weights = LAMDA*weights_auc + weights_like
+    # weights = LAMDA*weights_auc + weights_like
+    weights = weights_auc
     # weights = 1*weights_auc + weights_like
     # weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
@@ -170,7 +171,8 @@ identified = []
 
 for seed in range(args.seed,args.seed+args.n_runs):
     set_seed(seed)
-    EXP_NAME = f"cindex_{LAMDA}auc_{TAU}_{FILTER_DROP*1}"
+    # EXP_NAME = f"cindex_{LAMDA}auc_{TAU}_{FILTER_DROP*1}"
+    EXP_NAME = f"auconly_{TAU}_{FILTER_DROP*1}"
     wandb.config = vars(args)
     wandb.init(project="recov_hecktor",
                 config=wandb.config, 

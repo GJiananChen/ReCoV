@@ -180,7 +180,8 @@ if __name__ == '__main__':
     
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_15auc_01.npy","rb") as file:
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1.npy","rb") as file:
-    with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1.5auc_0.4_1.npy","rb") as file:
+    # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1.5auc_0.4_1.npy","rb") as file:
+    with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1_corr.npy","rb") as file:
         memory = np.load(file)
     exclusion = list(np.argsort(memory)[:20])
     print(exclusion)
