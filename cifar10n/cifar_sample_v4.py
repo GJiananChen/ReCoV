@@ -60,42 +60,49 @@ def train_one_run(fold_splits, filter_noise=False, noisy_idx=[]):
         test_labels.append(y_test)
     return accs, test_ids, pred_probs, test_labels
 
-def auc_weight_function(auc_val):
-    #0.5 is random hence easily achievable
-    weight = np.exp(3.5*(auc_val - 0.7))
-    #the val of weight will be 1 we debias it with exp**(-0.3)
-    weight = weight - 0.7
-    return weight
+def calc_entropy(pred_probs):
+    '''
+    Calculates per negative sample entropy with a bias term and normalization
+    Parameters:
+        pred_probs: (n x n_classes)
+    '''
+    n_classes = np.shape(pred_probs)[1]
+    entropy = -pred_probs*np.log2(pred_probs)
+    return 1 - np.sum(entropy,axis=1)/np.log2(n_classes)
+
+def calc_margin(pred_probs, test_labels):
+    test_index = np.stack((np.arange(len(test_labels)),test_labels))
+    highest_index = np.argsort(pred_probs,axis=1)[:,-1]
+    return pred_probs[test_index[0,:],test_index[1,:]] - pred_probs[test_index[0,:],highest_index]
 
 def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     '''
     Gives weighting to all the samples in the dataset
     High weight implies more probability of being selected in the top fold
     '''
-    n_folds = len(aucs)
-    number_ids = [len(i) for i in test_ids]
     test_ids_all = np.concatenate(test_ids)
     pred_probs_all = np.concatenate(pred_probs)
     test_labels_all = np.concatenate(test_labels)
-    # aucsweights = np.linspace(0,1,n_folds)
-    # weights_auc = aucsweights[np.argsort(aucs)]
-    # weights_auc = np.max(aucs)/aucs
-    # weights_auc = np.max(aucs) - aucs
-    # weights_auc = 1 - (weights_auc - weights_auc.min())/(weights_auc.max()-weights_auc.min())
-    # weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
-    # weights_auc = 2*(np.array(aucs) - 0.5)
-    weights_auc = aucs
-    # weights_auc = auc_weight_function(np.array(aucs))
-    weights_auc = np.concatenate([[weights_auc[i]]*number_ids[i] for i in range(n_folds)])
     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
+    #likelihood
     weights_like = 1 - (temp.max() - temp)
-    # weights = 1*weights_auc + weights_like
-    weights = weights_like
+    #Entropy lies between 0 to 2
+    weights_entropy = calc_entropy(pred_probs_all)
+    preds = 1*(np.argmax(pred_probs_all,axis=1)==test_labels_all)
+    weights_entropy = weights_entropy*(2*preds-1) + 1
+    #margin lies between 0 to 2
+    weights_margin = calc_margin(pred_probs_all,test_labels_all) + 1
+    weights = weights_like + weights_entropy + weights_margin
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
+
+    consistency_matrix.append(np.argmax(pred_probs_all,axis=1)[np.argsort(test_ids_all)])
+    prob_matrix.append(pred_probs_all[np.argsort(test_ids_all)])
+    true = test_labels_all[np.argsort(test_ids_all)]
+
     # print(weights[gt])
-    return memory
+    return memory, true
 
 def plot_weights(x,noise_labels):
     labels = np.zeros_like(x)
@@ -113,45 +120,33 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["clean","noise"])
-    plt.savefig(str(file_loc / f"results/cifar/cifar_n_sample_{NOISE_TYPE}_{MEMORY_NOISE_THRES}_{TAU}_v2.png"))
+    plt.savefig(str(file_loc / f"results/cifar/cifar_n_sample_{EXP_NAME}.png"))
 
-def closest_value(input_list, input_value):
-    difference = lambda input_list: abs(input_list - input_value)
+def consistency_metric():
+    b = []
+    for i in range(len(consistency_matrix.T)):
+        temp = np.unique(consistency_matrix[:,i],return_counts=True)
+        k = np.sort(temp[1])
+        b.append(np.sum(k[:-1]))
+    return np.array(b)
 
-    res = min(input_list, key=difference)
-
-    return res
-
-def pbinom(q,size,prob=0.5):
-    """
-    Calculates the cumulative of the binomial distribution
-    """
-    result=binom.cdf(k=q,n=size,p=prob,loc=0)
-    return result
-
-def qbinom(q, size, prob=0.5):
-    """
-    Calculates the quantile of the binomial distribution
-    """
-    result=binom.ppf(q=q,n=size,p=prob,loc=0)
-    return result
-
-def smallest_index(lst):
-    return lst.index(min(lst))
-
-def threshold_indice(lst, threshold=0.5):
-    return [x[0] for x in enumerate(lst) if x[1] < threshold]
+consistency_matrix = []
+prob_matrix = []
 
 if __name__ == '__main__':
-    N_RUNS = 20
+    N_RUNS = 30
     N_FOLDS = 5
-    TAU = 0.1
+    TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
+    FEAT = 'resnet' # ['dinov2', 'imagenet', 'resnet']
+    # FEAT = "dinov2"
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
-    MEMORY_NOISE_THRES = 0.3
+    MEMORY_NOISE_THRES = 0.08
+    TOP_K = 4500
     #Dropping bottom 5% of the dataset
-    NOISY_DROP = 0.8
+    NOISY_DROP = 0.5
+    EXP_NAME = f"{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v4"
 
     if not (file_loc / "results/cifar").is_dir():
         os.mkdir(file_loc / "results/cifar")
@@ -159,7 +154,15 @@ if __name__ == '__main__':
     random.seed(RANDOM_STATE)
     np.random.seed(RANDOM_STATE)
     cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
-    cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
+
+    if FEAT == 'dinov2':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
+    elif FEAT == 'imagenet':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_imagenet.h5')
+    elif FEAT == 'resnet':
+        cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_resnet18.h5')
+    else:
+        print('Feature type not suppported.')
 
 
     noise_file = torch.load(cifar10n_pt)
@@ -212,15 +215,18 @@ if __name__ == '__main__':
 
     for run in range(N_RUNS):
         # train for one run
+        # kf = KFold(n_splits=N_FOLDS, random_state=RANDOM_STATE+run, shuffle=True)
+        # fold_splits = list(kf.split(X, y))
         aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
         print(f"Iteration {run}: {aucs}")
         # rank the ids
-        memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
+        memory, true = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
         # Generate new set of folds based on weights
         fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
         # Get K worst samples for dropping from training
         # noise_set = np.argsort(memory)[:TOP_K]
-        identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+        identified = np.argsort(memory)[:TOP_K]
+        # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
         print(f"Number of noise labels identified: {len(identified)}")
         # Evaluate
         F = set(identified)
@@ -234,23 +240,121 @@ if __name__ == '__main__':
         print("F1 score: {}\nTrue noisy labels identified:{}\nFalse Positive: {}\nFalse Negative: {}".format(F1,NEP, ER1, ER2))
 
         plot_weights(memory, gt)
+    false_noisy = np.array(list(F.intersection(G)))
+    false_clean = np.array(list(F_t.intersection(M)))
+    true_noisy = np.array(list(F.intersection(M)))
+    true_clean = np.array(list(F_t.intersection(G)))
+    fn_ord = false_noisy[np.argsort(memory[false_noisy])]
+    fc_ord = false_clean[np.argsort(memory[false_clean])]
+    tn_ord = true_noisy[np.argsort(memory[true_noisy])]
+    tc_ord = true_clean[np.argsort(memory[true_clean])]
+    # def get_vals(idx):
+    #     print(consistency_matrix[:,idx])
+    #     print(f"given label: {true[idx]}")
+    #     print(f"clean label: {clean_label[idx]}")
+    #     print(f"entropy : {entropy_mod[idx]}")
+    #     print(f"margin : {margin_mod[idx]}")
+    #     print(f"prob_matrix : {prob_matrix[-1,idx,:]}")
+    #     print(f"memory : {memory[idx]}")
+    consistency_matrix = np.array(consistency_matrix)
+    prob_matrix = np.stack(prob_matrix)
+    margin_mod = calc_margin(prob_matrix[-1,:,:],y) + 1
+    entropy = calc_entropy(prob_matrix[-1,:,:])
+    preds = 1*(np.argmax(prob_matrix[-1,:,:],axis=1)==y).values
+    entropy_mod = entropy*(2*preds-1) + 1
 
-    print(identified)
 
-    identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    # identified_old = identified
+    # identified_old = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    # print(identified_old)
+    # consistency_matrix = np.array(consistency_matrix)
+    # prob_matrix = np.array(prob_matrix)
+    # cons = consistency_metric()
+    # identified = identified_old[np.where(cons[identified_old]<=1)[0]]
+
+    # identified = np.argsort(memory)[:TOP_K]
+    # identified = np.argsort(memory)[:4505]
+
     F = set(identified)
     G = set(range(0, len(y))) - set(gt)
     F_t = set(range(0, len(y))) - set(identified)
     M = set(gt)
-    ER1 = len(F.intersection(G)) / len(G)
-    ER2 = len(F_t.intersection(M)) / len(M)
+    ER1 = len(F.intersection(G)) / len(G) #False noisy
+    ER2 = len(F_t.intersection(M)) / len(M) #False good
     NEP = len(F.intersection(M)) / len(F)
     print("True noisy labels identified:{}\nFalse noisy: {}\nFalse good: {}".format(NEP, ER1, ER2))
 
-    X1 = np.delete(X.to_numpy(), identified, axis=0)
-    y1 = np.delete(y.to_numpy(), identified, axis=0)
-    X1= pd.DataFrame(X1)
+    noise_file = torch.load(cifar10n_pt)
+    clean_label = noise_file['clean_label']
+    worst_label = noise_file['worse_label']
+    aggre_label = noise_file['aggre_label']
+    random_label1 = noise_file['random_label1']
+    random_label2 = noise_file['random_label2']
+    random_label3 = noise_file['random_label3']
+
+    with h5py.File(cifar_h5, "r") as f:
+        X, X_test, y, y_test = f['train_feats'], f['test_feats'], f['train_labels'], f['test_labels']
+        X, X_test, y, y_test = np.array(X), np.array(X_test), np.array(y), np.array(y_test)
+
+    if NOISE_TYPE == 'clean':
+        y = clean_label
+    elif NOISE_TYPE == 'aggre':
+        y = aggre_label
+    elif NOISE_TYPE == 'random1':
+        y = random_label1
+    elif NOISE_TYPE == 'random2':
+        y = random_label2
+    elif NOISE_TYPE == 'random3':
+        y = random_label3
+    elif NOISE_TYPE == 'worst':
+        y = worst_label
+    else:
+        print('Noise type not recognized.')
+
+    X = pd.DataFrame(X)
+    X_test = pd.DataFrame(X_test)
+    y = pd.Series(y)
+    y_test = pd.Series(y_test)
+
+    y_clean = clean_label
+    y_clean = pd.Series(y_clean)
+    # rf = RandomForestClassifier(n_jobs=-1)
+    rf = LogisticRegression()
+    print(f'--------Training RF model on clean data')
+    rf.fit(X, y_clean)
+
+    y_pred = rf.predict(X_test)
+    pred_proba = rf.predict_proba(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f'ACC={acc * 100:.3f}%')
+
+    subset_length = 50000
+    noisy = [0 if clean_label[x] == y[x] else 1 for x in range(subset_length)]
+    a, b = np.unique(y[:subset_length], return_counts=True)
+    print(b)
+    X = X[:subset_length]
+    y = y[:subset_length]
+
+    target_indice = identified
+    # target_indice_gt = gt # when testing upper bound
+
+    X1 = np.delete(X.to_numpy(), target_indice, axis=0)
+    y1 = np.delete(y.to_numpy(), target_indice, axis=0)
+    X1 = pd.DataFrame(X1)
     y1 = pd.Series(y1)
+
+    X2 = np.delete(X.to_numpy(), gt, axis=0)
+    y2 = np.delete(y.to_numpy(), gt, axis=0)
+    X2 = pd.DataFrame(X2)
+    y2 = pd.Series(y2)
+
+    # np.array(clean_label[target_indice])
+    # np.array(aggre_label[target_indice])
+
+    random_state = 1
+    random.seed(random_state)
+    np.random.seed(random_state)
+    n_runs = 16000
 
     # rf = RandomForestClassifier(n_jobs=-1)
     rf = LogisticRegression()
@@ -260,17 +364,28 @@ if __name__ == '__main__':
     y_pred = rf.predict(X_test)
     pred_proba = rf.predict_proba(X_test)
     acc = accuracy_score(y_test, y_pred)
-    print(f'ACC={acc*100:.3f}%')
+    print(f'ACC={acc * 100:.3f}%')
 
     # rf = RandomForestClassifier(n_jobs=-1)
     rf = LogisticRegression()
-    print(f'--------Training RF model on ReCoV cleaned data')
+    print(f'--------Training RF model on recov cleaned data')
     rf.fit(X1, y1)
 
     y_pred = rf.predict(X_test)
     pred_proba = rf.predict_proba(X_test)
     acc = accuracy_score(y_test, y_pred)
-    print(f'ACC={acc*100:.3f}%')
+    print(f'ACC={acc * 100:.3f}%')
 
-    with open(str(file_loc/ f"results/cifar/memory_cifarn_{NOISE_TYPE}_{MEMORY_NOISE_THRES}_{TAU}_v2.npy"),"wb") as file:
-        np.save(file,memory)
+    # rf = RandomForestClassifier(n_jobs=-1)
+    rf = LogisticRegression()
+    print(f'--------Training RF model on gt cleaned data')
+    rf.fit(X2, y2)
+
+    y_pred = rf.predict(X_test)
+    pred_proba = rf.predict_proba(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f'ACC={acc * 100:.3f}%')
+    import pickle
+
+    with open(str(file_loc / f"results/memory_cifar_{EXP_NAME}.npy"), "wb") as file:
+        np.save(file, memory, allow_pickle=True)
