@@ -68,7 +68,8 @@ def calc_entropy(pred_probs):
     '''
     n_classes = np.shape(pred_probs)[1]
     entropy = -pred_probs*np.log2(pred_probs)
-    return 1 - np.sum(entropy,axis=1)/np.log2(n_classes)
+    # return 1 - np.sum(entropy,axis=1)/np.log2(n_classes)
+    return np.sum(entropy,axis=1)/np.log2(n_classes)
 
 def calc_margin(pred_probs, test_labels):
     # order = np.arange(len(test_labels))
@@ -102,17 +103,21 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
     #likelihood
-    weights_like = 1 - (temp.max() - temp)
+    # weights_like = 1 - (temp.max() - temp)
+    weights_like = temp
+    # weights_like = (np.exp(-5*temp)-1)/(np.exp(-5)-1)
     #Entropy lies between 0 to 2
     weights_entropy = calc_entropy(pred_probs_all)
-    preds = 1*(np.argmax(pred_probs_all,axis=1)==test_labels_all)
-    weights_entropy = weights_entropy*(2*preds-1) + 1
+    # preds = 1*(np.argmax(pred_probs_all,axis=1)==test_labels_all)
+    # weights_entropy = weights_entropy*(2*preds-1) + 1
     #margin lies between 0 to 2
     weights_margin = calc_margin(pred_probs_all,test_labels_all) + 1
     # weights_margin = calc_margin(pred_probs_all,test_labels_all)*(2*preds-1) + 1
     # weight_hits = catch_label(pred_probs_all,test_labels_all)
+    # weights_hits = 4 - filter_tophits(pred_probs_all, test_labels_all, thresh=0.05, hits_thresh=3)
     # weights = 3*weights_like + weights_entropy + weights_margin
-    weights = 2*weights_like + 0*weights_entropy + weights_margin
+    # weights = 2*weights_like + 0.5*weights_entropy + weights_margin
+    weights = 2*weights_like + weights_margin
     # weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
@@ -150,13 +155,44 @@ def consistency_metric():
         b.append(np.sum(k[:-1]))
     return np.array(b)
 
+def filter_tophits_matrix(prob_matrix, test_labels, thresh=0.05, hits_thresh=3):
+    nruns, nsamples, nclasses = np.shape(prob_matrix)
+    prob_matrix_filt = np.where(prob_matrix<=thresh, 0, prob_matrix)
+    h_run = []
+    for run in range(nruns):
+        #Replace items where prob < 0.03 to 0
+        top_hit_preds = np.argsort(prob_matrix[run,:,:],axis=1)[:,::-1]
+        hit_loc = np.where((top_hit_preds-test_labels.reshape(-1,1))==0)[1]
+        hit_mask = np.sort(prob_matrix_filt[run,:,:],axis=1)[:,::-1]>0
+        hit_loc_final = (hit_loc+1)*hit_mask[np.arange(len(hit_loc)),hit_loc]-1
+        # score_array = np.array([i if i < top_hits else 0 for i in range(nclasses)])
+        h_run.append(hit_loc_final)
+    h_run = np.array(h_run)
+    hits = np.where(hits==-1,hits_thresh+1,hits)
+    hits = np.where(hits>=hits_thresh+1,hits_thresh+1,hits)
+    return hits
+
+def filter_tophits(prob_matrix, test_labels, thresh=0.05, hits_thresh=3):
+    # nruns, nsamples, nclasses = np.shape(prob_matrix)
+    prob_matrix_filt = np.where(prob_matrix<=thresh, 0, prob_matrix)
+    #Replace items where prob < 0.03 to 0
+    top_hit_preds = np.argsort(prob_matrix,axis=1)[:,::-1]
+    hit_loc = np.where((top_hit_preds-test_labels.reshape(-1,1))==0)[1]
+    hit_mask = np.sort(prob_matrix_filt,axis=1)[:,::-1]>0
+    hit_loc_final = (hit_loc+1)*hit_mask[np.arange(len(hit_loc)),hit_loc]-1
+    # score_array = np.array([i if i < top_hits else 0 for i in range(nclasses)])
+    hits = hit_loc_final
+    hits = np.where(hits==-1,hits_thresh+1,hits)
+    hits = np.where(hits>=hits_thresh+1,hits_thresh+1,hits)
+    return hits
+
 consistency_matrix = []
 prob_matrix = []
 
 if __name__ == '__main__':
     N_RUNS = 30
     N_FOLDS = 5
-    TAU = 1
+    TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     FEAT = 'resnet' # ['dinov2', 'imagenet', 'resnet']
     # FEAT = "dinov2"
@@ -277,6 +313,8 @@ if __name__ == '__main__':
         print(f"prob_matrix : {prob_matrix[-1,idx,:]}")
         print(f"memory : {memory[idx]}")
         print(f"top hits : {check[idx]}")
+        # print(f"hits: {hits[:,idx]}")
+        # print(f"hits_mean : {np.mean(hits[:,idx])}")
     consistency_matrix = np.array(consistency_matrix)
     prob_matrix = np.stack(prob_matrix)
     margin_mod = calc_margin(prob_matrix[-1,:,:],y) + 1
@@ -284,9 +322,12 @@ if __name__ == '__main__':
     preds = 1*(np.argmax(prob_matrix[-1,:,:],axis=1)==y).values
     entropy_mod = entropy*(2*preds-1) + 1
     check = catch_label(prob_matrix[-1,:,:],y.values)
+    # hits = filter_tophits(prob_matrix, y.values)
+    # hits = filter_tophits_matrix(prob_matrix, y.values)
+
 
     # identified_old = identified
-    # identified_old = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    # identified_old = np.where(memory<=0.7)[0]
     # print(identified_old)
     # cons = consistency_metric()
     # identified = identified_old[np.where(cons[identified_old]<=1)[0]]
@@ -406,5 +447,6 @@ if __name__ == '__main__':
     print(f'ACC={acc * 100:.3f}%')
     import pickle
 
-    with open(str(file_loc / f"results/memory_cifar_{EXP_NAME}.npy"), "wb") as file:
-        np.save(file, memory, allow_pickle=True)
+    # with open(str(file_loc / f"results/memory_cifar_{EXP_NAME}.npy"), "wb") as file:
+    #     np.save(file, memory, allow_pickle=True)
+
