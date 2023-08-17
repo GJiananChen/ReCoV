@@ -117,7 +117,7 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     # weights_hits = 4 - filter_tophits(pred_probs_all, test_labels_all, thresh=0.05, hits_thresh=3)
     # weights = 3*weights_like + weights_entropy + weights_margin
     # weights = 2*weights_like + 0.5*weights_entropy + weights_margin
-    weights = 2*weights_like + weights_margin
+    weights = weights_like + 0.5*weights_margin
     # weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
@@ -167,7 +167,7 @@ def filter_tophits_matrix(prob_matrix, test_labels, thresh=0.05, hits_thresh=3):
         hit_loc_final = (hit_loc+1)*hit_mask[np.arange(len(hit_loc)),hit_loc]-1
         # score_array = np.array([i if i < top_hits else 0 for i in range(nclasses)])
         h_run.append(hit_loc_final)
-    h_run = np.array(h_run)
+    hits = np.array(h_run)
     hits = np.where(hits==-1,hits_thresh+1,hits)
     hits = np.where(hits>=hits_thresh+1,hits_thresh+1,hits)
     return hits
@@ -190,7 +190,7 @@ consistency_matrix = []
 prob_matrix = []
 
 if __name__ == '__main__':
-    N_RUNS = 30
+    N_RUNS = 20
     N_FOLDS = 5
     TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
@@ -313,7 +313,7 @@ if __name__ == '__main__':
         print(f"prob_matrix : {prob_matrix[-1,idx,:]}")
         print(f"memory : {memory[idx]}")
         print(f"top hits : {check[idx]}")
-        # print(f"hits: {hits[:,idx]}")
+        print(f"hits: {hits[:,idx]}")
         # print(f"hits_mean : {np.mean(hits[:,idx])}")
     consistency_matrix = np.array(consistency_matrix)
     prob_matrix = np.stack(prob_matrix)
@@ -323,8 +323,10 @@ if __name__ == '__main__':
     entropy_mod = entropy*(2*preds-1) + 1
     check = catch_label(prob_matrix[-1,:,:],y.values)
     # hits = filter_tophits(prob_matrix, y.values)
-    # hits = filter_tophits_matrix(prob_matrix, y.values)
+    hits = filter_tophits_matrix(prob_matrix, y.values)
 
+    identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    identified = identified[np.where(np.mean(hits[:,identified],axis=0)>=3)[0]]
 
     # identified_old = identified
     # identified_old = np.where(memory<=0.7)[0]
