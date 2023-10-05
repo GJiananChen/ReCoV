@@ -117,7 +117,7 @@ def rank_weights(aucs, test_ids, pred_probs, test_labels, memory)->np.array:
     # weights_hits = 4 - filter_tophits(pred_probs_all, test_labels_all, thresh=0.05, hits_thresh=3)
     # weights = 3*weights_like + weights_entropy + weights_margin
     # weights = 2*weights_like + 0.5*weights_entropy + weights_margin
-    weights = weights_like + 0.5*weights_margin
+    weights = weights_like + 0.1*weights_margin
     # weights = weights_like
     weights = weights[np.argsort(test_ids_all)]
     memory = 0.3*weights + 0.7*memory
@@ -194,11 +194,11 @@ if __name__ == '__main__':
     N_FOLDS = 5
     TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
-    FEAT = 'resnet' # ['dinov2', 'imagenet', 'resnet']
+    FEAT = 'dinov2' # ['dinov2', 'imagenet', 'resnet']
     # FEAT = "dinov2"
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
-    MEMORY_NOISE_THRES = 0.08
+    MEMORY_NOISE_THRES = 0.4
     TOP_K = 4500
     #Dropping bottom 5% of the dataset
     NOISY_DROP = 0.5

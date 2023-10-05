@@ -84,6 +84,14 @@ def train(epoch, train_loader, exclusion):
     # exclusion = [266 ,231, 316,  10, 215, 180,  16,  34, 194, 154, 173, 235 , 54 ,249, 269,   8,  12,  23, 245, 255]
     # Test performace: 0.6359839357429719 ± 0.036644116107534846 (1,1) cindex+auc 0.5 sample_v2
     # exclusion = [257, 241 , 72 ,316 , 54 ,324, 233 ,173 , 10 , 79 ,111  , 2 ,215 ,193 , 16, 149, 266 , 55 ,249 ,332]
+    # Test performace: 0.5934136546184738 ± 0.038921941130044165 (1,1) correction
+    # exclusion = [173, 104, 316, 294, 266, 54, 241, 249, 11, 40, 305, 149, 187, 135, 76, 72, 19, 194, 127, 321]
+    # Test performace: 0.5791164658634538 ± 0.05488947650849761 (cindex correction, 1,1)
+    # exclusion = [266, 104, 316, 332, 241, 173, 299, 79, 10, 324, 113, 236, 135, 283, 215, 311, 12, 140, 378, 278]
+    # Test performace: 0.6371084337349397 ± 0.034037275928644764 (1,1,0.5 cindex correction)
+    # exclusion = [72, 104, 54, 173, 316, 266, 40, 257, 235, 10, 270, 76, 233, 332, 362, 336, 245, 79, 269, 11]
+    # Test performace: 0.6175100401606425 ± 0.04749535532320803 (cindex correction, no idea regd the parameters)
+    # exclusion = [40, 316, 10, 76, 241, 257, 173, 193, 233, 332, 79, 299, 54, 104, 111, 149, 198, 266, 113, 8]
     #Without auc does not work well(058), 1.5 gives 0.62 similar 
     #The method performs better compared to sample 1 - cindex(61),1cindexauc(61),1.5cindexauc()
     criterion = NegativeLogLikelihood().cuda()
@@ -181,7 +189,9 @@ if __name__ == '__main__':
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_15auc_01.npy","rb") as file:
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1.npy","rb") as file:
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1.5auc_0.4_1.npy","rb") as file:
-    with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1_corr.npy","rb") as file:
+    # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1_corr.npy","rb") as file:
+    # with open("/home/ramanav/Projects/ReCoV/results/memory_auc_cindex_corr_8.npy","rb") as file:
+    with open("/home/ramanav/Projects/ReCoV/results/memory_auc_cindex_corr_9.npy","rb") as file:
         memory = np.load(file)
     exclusion = list(np.argsort(memory)[:20])
     print(exclusion)
