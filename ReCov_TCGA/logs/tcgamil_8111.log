@@ -1,0 +1,1239 @@
+Experiment Name: tcga_brca_AMIL_nll_surv_a0.0_lr5e-04_5foldcv_gc32
+
+Load Dataset
+(0, 0) : 0
+(0, 1) : 1
+(1, 0) : 2
+(1, 1) : 3
+(2, 0) : 4
+(2, 1) : 5
+(3, 0) : 6
+(3, 1) : 7
+label column: survival_months
+label dictionary: {(0, 0): 0, (0, 1): 1, (1, 0): 2, (1, 1): 3, (2, 0): 4, (2, 1): 5, (3, 0): 6, (3, 1): 7}
+number of classes: 8
+slide-level counts:  
+ 7    115
+5    133
+1    394
+3    175
+2     32
+0     32
+4     32
+6     33
+Name: label, dtype: int64
+Patient-LVL; Number of samples registered in class 0: 32
+Slide-LVL; Number of samples registered in class 0: 32
+Patient-LVL; Number of samples registered in class 1: 394
+Slide-LVL; Number of samples registered in class 1: 394
+Patient-LVL; Number of samples registered in class 2: 32
+Slide-LVL; Number of samples registered in class 2: 32
+Patient-LVL; Number of samples registered in class 3: 175
+Slide-LVL; Number of samples registered in class 3: 175
+Patient-LVL; Number of samples registered in class 4: 32
+Slide-LVL; Number of samples registered in class 4: 32
+Patient-LVL; Number of samples registered in class 5: 133
+Slide-LVL; Number of samples registered in class 5: 133
+Patient-LVL; Number of samples registered in class 6: 33
+Slide-LVL; Number of samples registered in class 6: 33
+Patient-LVL; Number of samples registered in class 7: 115
+Slide-LVL; Number of samples registered in class 7: 115
+label column: survival_months
+label dictionary: {(0, 0): 0, (0, 1): 1, (1, 0): 2, (1, 1): 3, (2, 0): 4, (2, 1): 5, (3, 0): 6, (3, 1): 7}
+number of classes: 8
+slide-level counts:  
+ 7    115
+5    133
+1    394
+3    175
+2     32
+0     32
+4     32
+6     33
+Name: label, dtype: int64
+Patient-LVL; Number of samples registered in class 0: 32
+Slide-LVL; Number of samples registered in class 0: 32
+Patient-LVL; Number of samples registered in class 1: 394
+Slide-LVL; Number of samples registered in class 1: 394
+Patient-LVL; Number of samples registered in class 2: 32
+Slide-LVL; Number of samples registered in class 2: 32
+Patient-LVL; Number of samples registered in class 3: 175
+Slide-LVL; Number of samples registered in class 3: 175
+Patient-LVL; Number of samples registered in class 4: 32
+Slide-LVL; Number of samples registered in class 4: 32
+Patient-LVL; Number of samples registered in class 5: 133
+Slide-LVL; Number of samples registered in class 5: 133
+Patient-LVL; Number of samples registered in class 6: 33
+Slide-LVL; Number of samples registered in class 6: 33
+Patient-LVL; Number of samples registered in class 7: 115
+Slide-LVL; Number of samples registered in class 7: 115
+split_dir /exa01/home/vramanathan/Projects/TCGA_MIL/Patch-GCN/splits/5foldcv/tcga_brca
+################# Settings ###################
+num_splits:  5
+k_start:  -1
+k_end:  -1
+task:  tcga_brca_survival
+max_epochs:  20
+results_dir:  /home/vramanathan/scratch/amgrp/TCGA_Results/10xfeature_MIL/Recov
+lr:  0.0005
+experiment:  tcga_brca_AMIL_nll_surv_a0.0_lr5e-04_5foldcv_gc32
+reg:  1e-05
+label_frac:  1.0
+bag_loss:  nll_surv
+bag_weight:  0.7
+seed:  1
+model_type:  amil
+weighted_sample:  True
+gc:  32
+opt:  adam
+split_dir:  /exa01/home/vramanathan/Projects/TCGA_MIL/Patch-GCN/splits/5foldcv/tcga_brca
+
+Training Fold 0!
+
+Init train/val/test splits... 
+Done!
+Training on 604 samples
+Validating on 152 samples
+
+Init loss function... 
+Init Model... Done!
+MIL_Attention_FC_surv(
+  (attention_net): DataParallel(
+    (module): Sequential(
+      (0): Linear(in_features=768, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.25, inplace=False)
+      (3): Attn_Net_Gated(
+        (attention_a): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Tanh()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_b): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Sigmoid()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_c): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (rho): Sequential(
+    (0): Linear(in_features=512, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+  )
+  (classifier): Linear(in_features=256, out_features=4, bias=True)
+)
+Total number of parameters: 788997
+Total number of trainable parameters: 788997
+
+Init optimizer ... Done!
+
+Init Loaders... 
+
+Done!
+
+Setup EarlyStopping... 
+Setup Validation C-Index Monitor... Done!
+
+
+batch 99, loss: 2.6140, label: 3, event_time: 146.3900, risk: -1.0266, bag_size: 6525
+batch 199, loss: 2.3907, label: 3, event_time: 118.5000, risk: -1.1899, bag_size: 2871
+batch 299, loss: 1.7550, label: 2, event_time: 68.8900, risk: -1.3808, bag_size: 3413
+batch 399, loss: 0.2971, label: 0, event_time: 24.7000, risk: -1.8108, bag_size: 142
+batch 499, loss: 1.8478, label: 2, event_time: 46.9800, risk: -2.6917, bag_size: 1834
+batch 599, loss: 1.5522, label: 2, event_time: 69.8800, risk: -2.3243, bag_size: 6460
+Epoch: 0, train_loss_surv: 1.4191, train_loss: 1.4191, train_c_index: 0.4738
+
+
+batch 99, loss: 2.3194, label: 0, event_time: 10.5800, risk: -2.6315, bag_size: 5491
+batch 199, loss: 0.0676, label: 0, event_time: 15.5100, risk: -2.7731, bag_size: 4541
+batch 299, loss: 1.7844, label: 2, event_time: 54.1700, risk: -2.5164, bag_size: 2710
+batch 399, loss: 1.9532, label: 2, event_time: 63.3000, risk: -2.4911, bag_size: 6811
+batch 499, loss: 0.3148, label: 1, event_time: 30.0600, risk: -2.4821, bag_size: 10858
+batch 599, loss: 0.2526, label: 0, event_time: 7.9500, risk: -2.0023, bag_size: 2482
+Epoch: 1, train_loss_surv: 1.1632, train_loss: 1.1632, train_c_index: 0.5485
+
+
+batch 99, loss: 1.6628, label: 0, event_time: 9.9200, risk: -2.1791, bag_size: 10291
+batch 199, loss: 0.2201, label: 0, event_time: 18.5900, risk: -2.0796, bag_size: 3501
+batch 299, loss: 0.4592, label: 2, event_time: 61.6300, risk: -2.5541, bag_size: 2177
+batch 399, loss: 0.5236, label: 2, event_time: 73.2900, risk: -2.5945, bag_size: 3309
+batch 499, loss: 1.5563, label: 0, event_time: 8.7400, risk: -2.1272, bag_size: 5638
+batch 599, loss: 1.8455, label: 1, event_time: 31.7700, risk: -2.2440, bag_size: 5333
+Epoch: 2, train_loss_surv: 1.1403, train_loss: 1.1403, train_c_index: 0.6593
+
+
+batch 99, loss: 1.5035, label: 2, event_time: 62.4200, risk: -2.6522, bag_size: 2055
+batch 199, loss: 1.9133, label: 1, event_time: 24.7700, risk: -2.3880, bag_size: 2597
+batch 299, loss: 1.4570, label: 0, event_time: 12.6500, risk: -1.8501, bag_size: 2982
+batch 399, loss: 1.2182, label: 3, event_time: 136.6300, risk: -2.4692, bag_size: 1053
+batch 499, loss: 1.3854, label: 3, event_time: 234.1000, risk: -2.3737, bag_size: 5307
+batch 599, loss: 1.4539, label: 2, event_time: 51.3500, risk: -2.1574, bag_size: 4224
+Epoch: 3, train_loss_surv: 1.0816, train_loss: 1.0816, train_c_index: 0.7002
+
+
+batch 99, loss: 1.4409, label: 0, event_time: 8.3800, risk: -1.8974, bag_size: 6496
+batch 199, loss: 0.0509, label: 0, event_time: 10.2800, risk: -2.9779, bag_size: 3533
+batch 299, loss: 1.5786, label: 2, event_time: 55.6500, risk: -2.6646, bag_size: 4130
+batch 399, loss: 0.9499, label: 3, event_time: 101.5400, risk: -2.8674, bag_size: 2745
+batch 499, loss: 0.1875, label: 0, event_time: 10.5800, risk: -2.1849, bag_size: 4834
+batch 599, loss: 1.4595, label: 3, event_time: 104.2000, risk: -2.1662, bag_size: 6040
+Epoch: 4, train_loss_surv: 1.0730, train_loss: 1.0730, train_c_index: 0.6737
+
+
+batch 99, loss: 0.7272, label: 2, event_time: 70.3000, risk: -2.2857, bag_size: 5828
+batch 199, loss: 0.6327, label: 2, event_time: 76.5100, risk: -2.3781, bag_size: 5613
+batch 299, loss: 0.5206, label: 1, event_time: 34.7900, risk: -2.0229, bag_size: 1130
+batch 399, loss: 1.5109, label: 3, event_time: 94.2200, risk: -1.8784, bag_size: 4478
+batch 499, loss: 2.4714, label: 1, event_time: 32.9800, risk: -3.1967, bag_size: 3480
+batch 599, loss: 0.0692, label: 0, event_time: 13.4700, risk: -2.8724, bag_size: 7235
+Epoch: 5, train_loss_surv: 1.0517, train_loss: 1.0517, train_c_index: 0.6843
+
+
+batch 99, loss: 0.4387, label: 3, event_time: 101.5400, risk: -3.4185, bag_size: 2745
+batch 199, loss: 1.8792, label: 1, event_time: 34.4300, risk: -2.6762, bag_size: 2294
+batch 299, loss: 1.5227, label: 2, event_time: 46.9800, risk: -2.5535, bag_size: 1834
+batch 399, loss: 0.9283, label: 2, event_time: 69.8800, risk: -1.6986, bag_size: 6460
+batch 499, loss: 0.6619, label: 2, event_time: 67.0500, risk: -2.3911, bag_size: 5011
+batch 599, loss: 2.1801, label: 0, event_time: 11.8900, risk: -2.1607, bag_size: 8188
+Epoch: 6, train_loss_surv: 0.9655, train_loss: 0.9655, train_c_index: 0.7058
+
+
+batch 99, loss: 1.7994, label: 1, event_time: 24.7700, risk: -2.2754, bag_size: 2597
+batch 199, loss: 1.4464, label: 3, event_time: 140.7700, risk: -2.1254, bag_size: 6043
+batch 299, loss: 0.5142, label: 3, event_time: 97.4000, risk: -2.9447, bag_size: 3902
+batch 399, loss: 0.0811, label: 1, event_time: 29.2400, risk: -3.3608, bag_size: 307
+batch 499, loss: 0.7223, label: 3, event_time: 129.4700, risk: -2.5488, bag_size: 3725
+batch 599, loss: 1.1527, label: 3, event_time: 107.1600, risk: -3.0162, bag_size: 1781
+Epoch: 7, train_loss_surv: 0.8914, train_loss: 0.8914, train_c_index: 0.7410
+
+
+batch 99, loss: 2.1686, label: 1, event_time: 38.5700, risk: -2.6978, bag_size: 4156
+batch 199, loss: 1.7082, label: 0, event_time: 13.9900, risk: -1.7324, bag_size: 825
+batch 299, loss: 0.5495, label: 0, event_time: 10.5800, risk: -0.9147, bag_size: 5491
+batch 399, loss: 0.1553, label: 2, event_time: 53.8800, risk: -3.3090, bag_size: 4375
+batch 499, loss: 0.5531, label: 3, event_time: 143.0400, risk: -3.4700, bag_size: 3030
+batch 599, loss: 1.5619, label: 0, event_time: 17.6700, risk: -1.5678, bag_size: 3962
+Epoch: 8, train_loss_surv: 0.8265, train_loss: 0.8265, train_c_index: 0.7730
+
+
+batch 99, loss: 0.6099, label: 3, event_time: 81.1100, risk: -3.3177, bag_size: 5667
+batch 199, loss: 0.6424, label: 3, event_time: 115.1800, risk: -3.0119, bag_size: 3424
+batch 299, loss: 0.0330, label: 2, event_time: 55.5800, risk: -3.7288, bag_size: 2043
+batch 399, loss: 0.0160, label: 1, event_time: 44.7800, risk: -3.8224, bag_size: 3886
+batch 499, loss: 0.0617, label: 2, event_time: 58.5700, risk: -3.4446, bag_size: 4235
+batch 599, loss: 0.6126, label: 3, event_time: 212.0900, risk: -2.6145, bag_size: 6271
+Epoch: 9, train_loss_surv: 0.7080, train_loss: 0.7080, train_c_index: 0.7813
+
+
+batch 99, loss: 0.1005, label: 0, event_time: 12.4800, risk: -1.9932, bag_size: 2940
+batch 199, loss: 0.0639, label: 2, event_time: 76.5100, risk: -3.7571, bag_size: 5613
+batch 299, loss: 0.3746, label: 3, event_time: 131.5700, risk: -3.3464, bag_size: 8372
+batch 399, loss: 0.1484, label: 2, event_time: 54.9600, risk: -2.0342, bag_size: 6796
+batch 499, loss: 0.4232, label: 3, event_time: 129.4700, risk: -2.6786, bag_size: 3725
+batch 599, loss: 4.1234, label: 1, event_time: 32.9800, risk: -3.6805, bag_size: 3480
+Epoch: 10, train_loss_surv: 0.7172, train_loss: 0.7172, train_c_index: 0.7869
+
+
+batch 99, loss: 0.3141, label: 0, event_time: 13.9600, risk: -2.3749, bag_size: 4076
+batch 199, loss: 0.5612, label: 1, event_time: 37.7800, risk: -2.0186, bag_size: 5868
+batch 299, loss: 0.5369, label: 3, event_time: 107.8500, risk: -3.2231, bag_size: 5613
+batch 399, loss: 0.5655, label: 0, event_time: 20.1100, risk: -0.8328, bag_size: 5594
+batch 499, loss: 2.9150, label: 3, event_time: 83.8000, risk: -3.7341, bag_size: 3101
+batch 599, loss: 0.8168, label: 2, event_time: 51.3500, risk: -1.8158, bag_size: 4224
+Epoch: 11, train_loss_surv: 0.5650, train_loss: 0.5650, train_c_index: 0.8426
+
+
+batch 99, loss: 0.1199, label: 2, event_time: 77.8900, risk: -3.1036, bag_size: 4968
+batch 199, loss: 0.1685, label: 0, event_time: 16.8500, risk: -1.9521, bag_size: 2530
+batch 299, loss: 0.3829, label: 3, event_time: 112.6800, risk: -3.2825, bag_size: 3692
+batch 399, loss: 0.3422, label: 3, event_time: 81.1100, risk: -3.2101, bag_size: 5667
+batch 499, loss: 0.1826, label: 3, event_time: 106.6700, risk: -3.7878, bag_size: 2689
+batch 599, loss: 0.0084, label: 1, event_time: 37.7100, risk: -3.3513, bag_size: 2997
+Epoch: 12, train_loss_surv: 0.5296, train_loss: 0.5296, train_c_index: 0.8294
+
+
+batch 99, loss: 0.7095, label: 3, event_time: 91.9200, risk: -3.0609, bag_size: 4987
+batch 199, loss: 0.5439, label: 0, event_time: 16.4900, risk: -2.1213, bag_size: 5666
+batch 299, loss: 0.0185, label: 2, event_time: 61.3000, risk: -3.5858, bag_size: 5209
+batch 399, loss: 0.6116, label: 2, event_time: 51.3500, risk: -1.6812, bag_size: 4224
+batch 499, loss: 0.6833, label: 0, event_time: 5.2600, risk: -1.1157, bag_size: 3954
+batch 599, loss: 0.0459, label: 2, event_time: 53.2200, risk: -3.1901, bag_size: 6302
+Epoch: 13, train_loss_surv: 0.4557, train_loss: 0.4557, train_c_index: 0.8589
+
+
+batch 99, loss: 0.7259, label: 3, event_time: 107.1600, risk: -3.2691, bag_size: 1781
+batch 199, loss: 0.8623, label: 3, event_time: 82.6200, risk: -3.1069, bag_size: 6620
+batch 299, loss: 0.6286, label: 0, event_time: 7.3600, risk: -0.7650, bag_size: 7183
+batch 399, loss: 0.0862, label: 3, event_time: 105.2200, risk: -3.8564, bag_size: 3628
+batch 499, loss: 0.4290, label: 2, event_time: 65.4700, risk: -1.9383, bag_size: 5706
+batch 599, loss: 0.0156, label: 2, event_time: 56.2400, risk: -3.6557, bag_size: 3331
+Epoch: 14, train_loss_surv: 0.4023, train_loss: 0.4023, train_c_index: 0.8632
+
+
+batch 99, loss: 0.2757, label: 3, event_time: 131.5700, risk: -3.6119, bag_size: 8372
+batch 199, loss: 0.0285, label: 2, event_time: 71.9800, risk: -3.7935, bag_size: 5666
+batch 299, loss: 0.3701, label: 3, event_time: 107.1600, risk: -3.1535, bag_size: 1781
+batch 399, loss: 0.0014, label: 0, event_time: 13.0100, risk: -3.3289, bag_size: 604
+batch 499, loss: 0.7183, label: 0, event_time: 18.5000, risk: -1.3300, bag_size: 2885
+batch 599, loss: 1.0599, label: 3, event_time: 78.3500, risk: -2.8704, bag_size: 993
+Epoch: 15, train_loss_surv: 0.3461, train_loss: 0.3461, train_c_index: 0.8865
+
+
+batch 99, loss: 0.0079, label: 1, event_time: 34.8900, risk: -3.9097, bag_size: 5385
+batch 199, loss: 0.3715, label: 0, event_time: 7.8500, risk: -0.7855, bag_size: 6974
+batch 299, loss: 0.0433, label: 2, event_time: 69.7800, risk: -3.0818, bag_size: 3426
+batch 399, loss: 0.0446, label: 1, event_time: 25.0000, risk: -3.3203, bag_size: 474
+batch 499, loss: 0.1191, label: 3, event_time: 110.5100, risk: -3.8414, bag_size: 7120
+batch 599, loss: 0.1941, label: 0, event_time: 20.9900, risk: -0.3906, bag_size: 6700
+Epoch: 16, train_loss_surv: 0.2969, train_loss: 0.2969, train_c_index: 0.8848
+
+
+batch 99, loss: 0.0801, label: 2, event_time: 70.1700, risk: -3.5106, bag_size: 4816
+batch 199, loss: 0.5404, label: 3, event_time: 91.9200, risk: -3.2749, bag_size: 4987
+batch 299, loss: 0.0448, label: 3, event_time: 98.2600, risk: -3.9082, bag_size: 1610
+batch 399, loss: 0.2379, label: 3, event_time: 91.9200, risk: -3.0790, bag_size: 4987
+batch 499, loss: 0.5597, label: 3, event_time: 81.1100, risk: -3.4149, bag_size: 5667
+batch 599, loss: 0.0453, label: 1, event_time: 41.8900, risk: -1.0472, bag_size: 5566
+Epoch: 17, train_loss_surv: 0.2839, train_loss: 0.2839, train_c_index: 0.8959
+
+
+batch 99, loss: 0.8726, label: 2, event_time: 77.6900, risk: -1.8784, bag_size: 3554
+batch 199, loss: 1.0815, label: 3, event_time: 212.0900, risk: -3.6537, bag_size: 6271
+batch 299, loss: 0.1239, label: 3, event_time: 100.6200, risk: -3.0557, bag_size: 6346
+batch 399, loss: 0.1155, label: 3, event_time: 91.9200, risk: -2.9602, bag_size: 4987
+batch 499, loss: 0.2938, label: 2, event_time: 54.1700, risk: -2.4419, bag_size: 2710
+batch 599, loss: 0.0272, label: 2, event_time: 52.9600, risk: -3.9443, bag_size: 5539
+Epoch: 18, train_loss_surv: 0.2926, train_loss: 0.2926, train_c_index: 0.9005
+
+
+batch 99, loss: 0.9716, label: 3, event_time: 83.8000, risk: -3.4548, bag_size: 3101
+batch 199, loss: 0.3021, label: 2, event_time: 50.7900, risk: -3.4721, bag_size: 3916
+batch 299, loss: 0.1031, label: 2, event_time: 66.0000, risk: -2.0932, bag_size: 2367
+batch 399, loss: 0.1154, label: 2, event_time: 51.1200, risk: -1.9559, bag_size: 3824
+batch 499, loss: 0.2920, label: 1, event_time: 25.7900, risk: -1.2717, bag_size: 1340
+batch 599, loss: 0.6591, label: 0, event_time: 7.8500, risk: -1.2944, bag_size: 6974
+Epoch: 19, train_loss_surv: 0.2628, train_loss: 0.2628, train_c_index: 0.8927
+Val c-Index: 0.6872
+
+Training Fold 1!
+
+Init train/val/test splits... 
+Done!
+Training on 605 samples
+Validating on 151 samples
+
+Init loss function... 
+Init Model... Done!
+MIL_Attention_FC_surv(
+  (attention_net): DataParallel(
+    (module): Sequential(
+      (0): Linear(in_features=768, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.25, inplace=False)
+      (3): Attn_Net_Gated(
+        (attention_a): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Tanh()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_b): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Sigmoid()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_c): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (rho): Sequential(
+    (0): Linear(in_features=512, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+  )
+  (classifier): Linear(in_features=256, out_features=4, bias=True)
+)
+Total number of parameters: 788997
+Total number of trainable parameters: 788997
+
+Init optimizer ... Done!
+
+Init Loaders... 
+
+Done!
+
+Setup EarlyStopping... 
+Setup Validation C-Index Monitor... Done!
+
+
+batch 99, loss: 2.6233, label: 3, event_time: 127.2300, risk: -1.0203, bag_size: 9426
+batch 199, loss: 2.3771, label: 3, event_time: 105.1900, risk: -1.2158, bag_size: 5776
+batch 299, loss: 1.7846, label: 2, event_time: 68.8900, risk: -1.3782, bag_size: 3413
+batch 399, loss: 1.0549, label: 2, event_time: 65.5700, risk: -1.8617, bag_size: 4260
+batch 499, loss: 1.3179, label: 3, event_time: 86.8900, risk: -2.3780, bag_size: 594
+batch 599, loss: 3.0837, label: 0, event_time: 17.6700, risk: -2.9319, bag_size: 3962
+Epoch: 0, train_loss_surv: 1.3851, train_loss: 1.3851, train_c_index: 0.4995
+
+
+batch 99, loss: 0.0732, label: 0, event_time: 19.0200, risk: -2.7637, bag_size: 458
+batch 199, loss: 2.0556, label: 1, event_time: 25.8200, risk: -2.4872, bag_size: 3207
+batch 299, loss: 1.2668, label: 3, event_time: 111.9900, risk: -2.3086, bag_size: 795
+batch 399, loss: 1.9811, label: 0, event_time: 17.6700, risk: -2.3916, bag_size: 3962
+batch 499, loss: 0.6397, label: 2, event_time: 74.3400, risk: -2.3359, bag_size: 2348
+batch 599, loss: 1.4608, label: 2, event_time: 53.9400, risk: -2.1549, bag_size: 5238
+Epoch: 1, train_loss_surv: 1.1875, train_loss: 1.1875, train_c_index: 0.5196
+
+
+batch 99, loss: 1.4168, label: 3, event_time: 130.0600, risk: -2.1912, bag_size: 7367
+batch 199, loss: 1.8685, label: 0, event_time: 7.4600, risk: -2.2377, bag_size: 1274
+batch 299, loss: 1.3088, label: 2, event_time: 61.8900, risk: -2.2456, bag_size: 2392
+batch 399, loss: 1.5369, label: 2, event_time: 74.6700, risk: -2.6641, bag_size: 2637
+batch 499, loss: 0.6697, label: 2, event_time: 50.4300, risk: -2.2768, bag_size: 4752
+batch 599, loss: 2.0615, label: 1, event_time: 34.4300, risk: -2.6620, bag_size: 2294
+Epoch: 2, train_loss_surv: 1.0985, train_loss: 1.0985, train_c_index: 0.6259
+
+
+batch 99, loss: 1.1503, label: 3, event_time: 234.1000, risk: -2.6559, bag_size: 5307
+batch 199, loss: 0.6233, label: 2, event_time: 70.3700, risk: -2.3995, bag_size: 2420
+batch 299, loss: 0.5128, label: 1, event_time: 40.3700, risk: -2.0179, bag_size: 7286
+batch 399, loss: 1.3938, label: 3, event_time: 102.6900, risk: -2.5075, bag_size: 4384
+batch 499, loss: 1.6349, label: 2, event_time: 77.1400, risk: -1.9525, bag_size: 4163
+batch 599, loss: 1.4354, label: 1, event_time: 44.8400, risk: -2.1063, bag_size: 3414
+Epoch: 3, train_loss_surv: 1.1082, train_loss: 1.1082, train_c_index: 0.6464
+
+
+batch 99, loss: 1.1602, label: 3, event_time: 81.1100, risk: -2.6384, bag_size: 5667
+batch 199, loss: 1.8722, label: 1, event_time: 27.1000, risk: -2.4957, bag_size: 5712
+batch 299, loss: 0.4042, label: 1, event_time: 38.7300, risk: -2.2784, bag_size: 2852
+batch 399, loss: 1.4446, label: 1, event_time: 37.5200, risk: -1.8293, bag_size: 5557
+batch 499, loss: 1.0209, label: 3, event_time: 169.3800, risk: -2.8278, bag_size: 7383
+batch 599, loss: 0.4148, label: 2, event_time: 65.5700, risk: -2.8427, bag_size: 4260
+Epoch: 4, train_loss_surv: 1.0726, train_loss: 1.0726, train_c_index: 0.6834
+
+
+batch 99, loss: 0.8158, label: 3, event_time: 107.8500, risk: -2.9976, bag_size: 5613
+batch 199, loss: 0.1016, label: 0, event_time: 0.0300, risk: -2.5614, bag_size: 3651
+batch 299, loss: 0.0678, label: 1, event_time: 34.2600, risk: -3.3605, bag_size: 2567
+batch 399, loss: 1.9044, label: 3, event_time: 130.0600, risk: -2.5370, bag_size: 7367
+batch 499, loss: 1.1638, label: 0, event_time: 5.7200, risk: -1.6915, bag_size: 400
+batch 599, loss: 0.8783, label: 3, event_time: 85.0900, risk: -2.7986, bag_size: 1997
+Epoch: 5, train_loss_surv: 1.0300, train_loss: 1.0300, train_c_index: 0.6691
+
+
+batch 99, loss: 0.8176, label: 3, event_time: 105.1900, risk: -2.7817, bag_size: 5776
+batch 199, loss: 0.8528, label: 3, event_time: 80.2200, risk: -2.9799, bag_size: 4747
+batch 299, loss: 0.5585, label: 3, event_time: 86.3700, risk: -3.2839, bag_size: 2645
+batch 399, loss: 0.3694, label: 2, event_time: 66.0000, risk: -2.1460, bag_size: 2367
+batch 499, loss: 0.4956, label: 2, event_time: 62.8800, risk: -2.6137, bag_size: 4515
+batch 599, loss: 0.0671, label: 0, event_time: 19.4200, risk: -3.0821, bag_size: 3820
+Epoch: 6, train_loss_surv: 0.9257, train_loss: 0.9257, train_c_index: 0.7294
+
+
+batch 99, loss: 1.3650, label: 3, event_time: 97.4000, risk: -3.0448, bag_size: 3902
+batch 199, loss: 0.0609, label: 1, event_time: 28.1200, risk: -3.5924, bag_size: 4921
+batch 299, loss: 0.9907, label: 2, event_time: 46.6200, risk: -1.8675, bag_size: 3707
+batch 399, loss: 0.0321, label: 0, event_time: 20.2400, risk: -3.2651, bag_size: 3280
+batch 499, loss: 2.1935, label: 3, event_time: 130.0600, risk: -2.3766, bag_size: 7367
+batch 599, loss: 0.8566, label: 2, event_time: 69.8800, risk: -1.6227, bag_size: 6460
+Epoch: 7, train_loss_surv: 0.8707, train_loss: 0.8707, train_c_index: 0.7465
+
+
+batch 99, loss: 0.1151, label: 2, event_time: 55.5800, risk: -3.5488, bag_size: 2043
+batch 199, loss: 0.7341, label: 3, event_time: 122.7300, risk: -2.8276, bag_size: 2934
+batch 299, loss: 0.0142, label: 0, event_time: 20.3700, risk: -3.4114, bag_size: 2674
+batch 399, loss: 0.4814, label: 2, event_time: 46.5500, risk: -2.6020, bag_size: 2921
+batch 499, loss: 0.0206, label: 1, event_time: 42.3100, risk: -3.6912, bag_size: 3989
+batch 599, loss: 0.3671, label: 3, event_time: 129.4700, risk: -3.0163, bag_size: 3725
+Epoch: 8, train_loss_surv: 0.7625, train_loss: 0.7625, train_c_index: 0.8250
+
+
+batch 99, loss: 0.5990, label: 0, event_time: 12.3900, risk: -1.0016, bag_size: 8819
+batch 199, loss: 0.6524, label: 3, event_time: 212.0900, risk: -2.4876, bag_size: 6271
+batch 299, loss: 0.7458, label: 3, event_time: 93.7600, risk: -2.6399, bag_size: 2384
+batch 399, loss: 0.8057, label: 3, event_time: 93.7600, risk: -3.1456, bag_size: 2384
+batch 499, loss: 0.1503, label: 1, event_time: 25.8200, risk: -1.2863, bag_size: 3207
+batch 599, loss: 1.1715, label: 1, event_time: 37.4500, risk: -1.4690, bag_size: 6120
+Epoch: 9, train_loss_surv: 0.7544, train_loss: 0.7544, train_c_index: 0.7953
+
+
+batch 99, loss: 0.7304, label: 3, event_time: 113.7000, risk: -3.1471, bag_size: 5128
+batch 199, loss: 0.5557, label: 2, event_time: 69.8800, risk: -1.6465, bag_size: 6460
+batch 299, loss: 0.2008, label: 1, event_time: 32.8500, risk: -2.7572, bag_size: 3175
+batch 399, loss: 0.2819, label: 2, event_time: 67.8100, risk: -3.3087, bag_size: 5960
+batch 499, loss: 0.0130, label: 0, event_time: 18.2000, risk: -3.4502, bag_size: 4134
+batch 599, loss: 1.5328, label: 3, event_time: 93.7600, risk: -3.2658, bag_size: 2384
+Epoch: 10, train_loss_surv: 0.6872, train_loss: 0.6872, train_c_index: 0.8209
+
+
+batch 99, loss: 1.5101, label: 0, event_time: 18.5000, risk: -2.2639, bag_size: 2885
+batch 199, loss: 0.0749, label: 3, event_time: 166.2900, risk: -3.8555, bag_size: 1527
+batch 299, loss: 0.0079, label: 2, event_time: 63.5700, risk: -3.9654, bag_size: 4533
+batch 399, loss: 1.1625, label: 0, event_time: 13.9900, risk: -0.9734, bag_size: 825
+batch 499, loss: 0.2752, label: 3, event_time: 129.4700, risk: -2.8131, bag_size: 3725
+batch 599, loss: 1.7721, label: 2, event_time: 61.4700, risk: -1.9317, bag_size: 2289
+Epoch: 11, train_loss_surv: 0.5539, train_loss: 0.5539, train_c_index: 0.8395
+
+
+batch 99, loss: 0.5358, label: 3, event_time: 127.2300, risk: -3.1623, bag_size: 9426
+batch 199, loss: 0.0250, label: 1, event_time: 34.2600, risk: -3.7966, bag_size: 3965
+batch 299, loss: 1.2441, label: 1, event_time: 33.9700, risk: -1.4647, bag_size: 3795
+batch 399, loss: 0.3438, label: 1, event_time: 37.5200, risk: -1.0828, bag_size: 5557
+batch 499, loss: 0.0692, label: 2, event_time: 61.8900, risk: -2.0428, bag_size: 2392
+batch 599, loss: 0.2756, label: 2, event_time: 63.3000, risk: -2.1967, bag_size: 6811
+Epoch: 12, train_loss_surv: 0.4905, train_loss: 0.4905, train_c_index: 0.8647
+
+
+batch 99, loss: 0.8495, label: 3, event_time: 78.3500, risk: -2.8976, bag_size: 993
+batch 199, loss: 0.1241, label: 2, event_time: 46.9800, risk: -2.1663, bag_size: 1834
+batch 299, loss: 0.0444, label: 0, event_time: 20.0700, risk: -3.4663, bag_size: 8801
+batch 399, loss: 0.1567, label: 0, event_time: 10.5800, risk: -0.3110, bag_size: 5491
+batch 499, loss: 0.1283, label: 0, event_time: 20.9900, risk: -0.2185, bag_size: 6700
+batch 599, loss: 0.2848, label: 0, event_time: 3.8100, risk: -0.3341, bag_size: 8188
+Epoch: 13, train_loss_surv: 0.4315, train_loss: 0.4315, train_c_index: 0.8720
+
+
+batch 99, loss: 0.1245, label: 1, event_time: 37.5200, risk: -1.0696, bag_size: 5557
+batch 199, loss: 1.0085, label: 1, event_time: 32.8500, risk: -1.7564, bag_size: 3175
+batch 299, loss: 0.0449, label: 2, event_time: 50.6600, risk: -3.7083, bag_size: 5452
+batch 399, loss: 0.0701, label: 1, event_time: 24.7700, risk: -3.6114, bag_size: 1003
+batch 499, loss: 1.5013, label: 1, event_time: 28.2500, risk: -1.4785, bag_size: 4092
+batch 599, loss: 0.0057, label: 0, event_time: 15.0500, risk: -2.6805, bag_size: 966
+Epoch: 14, train_loss_surv: 0.4304, train_loss: 0.4304, train_c_index: 0.8643
+
+
+batch 99, loss: 0.0761, label: 0, event_time: 20.0700, risk: -3.3631, bag_size: 8801
+batch 199, loss: 0.0001, label: 0, event_time: 19.1900, risk: -3.7886, bag_size: 7026
+batch 299, loss: 0.2873, label: 2, event_time: 74.6700, risk: -2.4474, bag_size: 2637
+batch 399, loss: 0.5193, label: 0, event_time: 7.8500, risk: -0.6488, bag_size: 6974
+batch 499, loss: 0.2129, label: 3, event_time: 98.5900, risk: -3.7783, bag_size: 547
+batch 599, loss: 0.0435, label: 3, event_time: 99.2800, risk: -3.9229, bag_size: 2158
+Epoch: 15, train_loss_surv: 0.3899, train_loss: 0.3899, train_c_index: 0.8796
+
+
+batch 99, loss: 0.0573, label: 2, event_time: 68.8900, risk: -2.0418, bag_size: 3413
+batch 199, loss: 0.0079, label: 2, event_time: 61.6300, risk: -3.8208, bag_size: 2177
+batch 299, loss: 0.1235, label: 3, event_time: 122.7300, risk: -2.9045, bag_size: 2934
+batch 399, loss: 0.1910, label: 2, event_time: 59.5300, risk: -2.1544, bag_size: 4651
+batch 499, loss: 0.5343, label: 0, event_time: 13.4000, risk: -1.8566, bag_size: 1280
+batch 599, loss: 0.0265, label: 2, event_time: 52.1400, risk: -3.5758, bag_size: 3837
+Epoch: 16, train_loss_surv: 0.3958, train_loss: 0.3958, train_c_index: 0.8572
+
+
+batch 99, loss: 0.0256, label: 0, event_time: 2.3000, risk: -3.7873, bag_size: 995
+batch 199, loss: 0.0041, label: 0, event_time: 12.3500, risk: -2.8245, bag_size: 1363
+batch 299, loss: 0.3482, label: 1, event_time: 32.0300, risk: -2.4490, bag_size: 1473
+batch 399, loss: 0.5208, label: 3, event_time: 212.0900, risk: -3.3908, bag_size: 6271
+batch 499, loss: 0.7510, label: 2, event_time: 77.1400, risk: -1.4089, bag_size: 4163
+batch 599, loss: 0.3769, label: 1, event_time: 44.8400, risk: -0.8610, bag_size: 3414
+Epoch: 17, train_loss_surv: 0.2809, train_loss: 0.2809, train_c_index: 0.8927
+
+
+batch 99, loss: 0.4575, label: 2, event_time: 70.3000, risk: -2.2325, bag_size: 5828
+batch 199, loss: 0.0048, label: 2, event_time: 49.4400, risk: -3.8814, bag_size: 3659
+batch 299, loss: 0.0252, label: 0, event_time: 10.5800, risk: -0.0573, bag_size: 5491
+batch 399, loss: 0.0298, label: 2, event_time: 73.2900, risk: -3.8338, bag_size: 3309
+batch 499, loss: 0.0872, label: 2, event_time: 50.4300, risk: -2.9865, bag_size: 4752
+batch 599, loss: 0.1618, label: 1, event_time: 30.9800, risk: -1.1444, bag_size: 914
+Epoch: 18, train_loss_surv: 0.2566, train_loss: 0.2566, train_c_index: 0.8992
+
+
+batch 99, loss: 0.0001, label: 0, event_time: 18.5900, risk: -2.0284, bag_size: 3501
+batch 199, loss: 0.8756, label: 2, event_time: 65.4700, risk: -2.6102, bag_size: 5706
+batch 299, loss: 0.0280, label: 1, event_time: 30.9800, risk: -1.0232, bag_size: 914
+batch 399, loss: 0.1980, label: 3, event_time: 86.8900, risk: -3.8106, bag_size: 3331
+batch 499, loss: 0.0347, label: 0, event_time: 20.2400, risk: -0.0801, bag_size: 5478
+batch 599, loss: 0.1461, label: 2, event_time: 62.4200, risk: -2.1433, bag_size: 2055
+Epoch: 19, train_loss_surv: 0.2620, train_loss: 0.2620, train_c_index: 0.9131
+Val c-Index: 0.4207
+
+Training Fold 2!
+
+Init train/val/test splits... 
+Done!
+Training on 605 samples
+Validating on 151 samples
+
+Init loss function... 
+Init Model... Done!
+MIL_Attention_FC_surv(
+  (attention_net): DataParallel(
+    (module): Sequential(
+      (0): Linear(in_features=768, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.25, inplace=False)
+      (3): Attn_Net_Gated(
+        (attention_a): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Tanh()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_b): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Sigmoid()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_c): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (rho): Sequential(
+    (0): Linear(in_features=512, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+  )
+  (classifier): Linear(in_features=256, out_features=4, bias=True)
+)
+Total number of parameters: 788997
+Total number of trainable parameters: 788997
+
+Init optimizer ... Done!
+
+Init Loaders... 
+
+Done!
+
+Setup EarlyStopping... 
+Setup Validation C-Index Monitor... Done!
+
+
+batch 99, loss: 2.6653, label: 3, event_time: 233.4400, risk: -1.0201, bag_size: 590
+batch 199, loss: 2.3795, label: 3, event_time: 104.2000, risk: -1.2144, bag_size: 6040
+batch 299, loss: 1.3000, label: 2, event_time: 63.0400, risk: -1.5300, bag_size: 4010
+batch 399, loss: 1.4796, label: 1, event_time: 41.8900, risk: -2.0444, bag_size: 5566
+batch 499, loss: 0.1625, label: 0, event_time: 0.2600, risk: -2.2549, bag_size: 862
+batch 599, loss: 2.3200, label: 2, event_time: 55.6500, risk: -2.9433, bag_size: 4130
+Epoch: 0, train_loss_surv: 1.4028, train_loss: 1.4028, train_c_index: 0.5115
+
+
+batch 99, loss: 2.6464, label: 0, event_time: 13.9900, risk: -2.6304, bag_size: 825
+batch 199, loss: 0.2407, label: 1, event_time: 30.5800, risk: -2.7084, bag_size: 5858
+batch 299, loss: 1.2984, label: 3, event_time: 111.9900, risk: -2.4371, bag_size: 795
+batch 399, loss: 1.6965, label: 2, event_time: 49.5400, risk: -2.1162, bag_size: 4853
+batch 499, loss: 1.5824, label: 3, event_time: 80.2200, risk: -2.2408, bag_size: 3278
+batch 599, loss: 1.6246, label: 2, event_time: 55.4500, risk: -2.1583, bag_size: 2218
+Epoch: 1, train_loss_surv: 1.2384, train_loss: 1.2384, train_c_index: 0.5255
+
+
+batch 99, loss: 1.5136, label: 2, event_time: 57.7900, risk: -2.0005, bag_size: 4120
+batch 199, loss: 1.7966, label: 1, event_time: 36.2700, risk: -2.0297, bag_size: 4143
+batch 299, loss: 1.3161, label: 2, event_time: 61.8900, risk: -2.1489, bag_size: 2392
+batch 399, loss: 1.1466, label: 3, event_time: 97.4000, risk: -2.2287, bag_size: 4137
+batch 499, loss: 0.0647, label: 0, event_time: 19.3200, risk: -2.6261, bag_size: 3376
+batch 599, loss: 0.4772, label: 2, event_time: 48.1900, risk: -2.5431, bag_size: 3358
+Epoch: 2, train_loss_surv: 1.1542, train_loss: 1.1542, train_c_index: 0.6210
+
+
+batch 99, loss: 1.0016, label: 3, event_time: 128.9800, risk: -2.6891, bag_size: 3997
+batch 199, loss: 0.9572, label: 2, event_time: 60.5100, risk: -1.9685, bag_size: 8400
+batch 299, loss: 0.2954, label: 1, event_time: 41.1000, risk: -2.4076, bag_size: 6752
+batch 399, loss: 1.0381, label: 3, event_time: 140.1800, risk: -2.5622, bag_size: 3754
+batch 499, loss: 1.9143, label: 1, event_time: 24.7700, risk: -2.3072, bag_size: 2597
+batch 599, loss: 1.8878, label: 1, event_time: 44.8400, risk: -2.4111, bag_size: 3414
+Epoch: 3, train_loss_surv: 1.0463, train_loss: 1.0463, train_c_index: 0.6582
+
+
+batch 99, loss: 1.2663, label: 3, event_time: 255.4900, risk: -2.5580, bag_size: 3180
+batch 199, loss: 2.1079, label: 1, event_time: 27.1000, risk: -2.5984, bag_size: 5712
+batch 299, loss: 1.1184, label: 3, event_time: 102.5300, risk: -2.5995, bag_size: 4141
+batch 399, loss: 1.7917, label: 2, event_time: 51.3500, risk: -2.1755, bag_size: 4224
+batch 499, loss: 1.0018, label: 3, event_time: 169.3800, risk: -2.7065, bag_size: 7383
+batch 599, loss: 1.4601, label: 1, event_time: 41.8900, risk: -2.0857, bag_size: 5566
+Epoch: 4, train_loss_surv: 1.0658, train_loss: 1.0658, train_c_index: 0.6741
+
+
+batch 99, loss: 1.7641, label: 1, event_time: 24.7700, risk: -2.2184, bag_size: 2597
+batch 199, loss: 0.1471, label: 0, event_time: 0.1600, risk: -2.3786, bag_size: 2931
+batch 299, loss: 1.4370, label: 3, event_time: 102.5300, risk: -2.4631, bag_size: 4141
+batch 399, loss: 1.5226, label: 3, event_time: 130.0600, risk: -2.3172, bag_size: 7367
+batch 499, loss: 1.1151, label: 0, event_time: 5.7200, risk: -1.7336, bag_size: 400
+batch 599, loss: 1.1475, label: 3, event_time: 101.5400, risk: -3.0620, bag_size: 2745
+Epoch: 5, train_loss_surv: 1.0173, train_loss: 1.0173, train_c_index: 0.6998
+
+
+batch 99, loss: 1.4747, label: 3, event_time: 104.2000, risk: -2.3150, bag_size: 6040
+batch 199, loss: 0.9907, label: 3, event_time: 95.6300, risk: -2.6892, bag_size: 2956
+batch 299, loss: 0.8504, label: 3, event_time: 95.9300, risk: -3.0461, bag_size: 707
+batch 399, loss: 1.8670, label: 2, event_time: 51.3500, risk: -1.9868, bag_size: 4224
+batch 499, loss: 0.0374, label: 0, event_time: 21.6800, risk: -2.8485, bag_size: 4926
+batch 599, loss: 0.2156, label: 1, event_time: 40.9300, risk: -2.6950, bag_size: 4248
+Epoch: 6, train_loss_surv: 0.9624, train_loss: 0.9624, train_c_index: 0.7329
+
+
+batch 99, loss: 1.1986, label: 3, event_time: 188.5300, risk: -2.9713, bag_size: 5847
+batch 199, loss: 2.2569, label: 1, event_time: 38.5700, risk: -2.4258, bag_size: 4156
+batch 299, loss: 1.2156, label: 1, event_time: 25.8200, risk: -2.4319, bag_size: 3207
+batch 399, loss: 1.0241, label: 0, event_time: 23.7500, risk: -1.4639, bag_size: 5394
+batch 499, loss: 1.8588, label: 2, event_time: 57.7900, risk: -1.2288, bag_size: 4120
+batch 599, loss: 1.3110, label: 3, event_time: 91.9200, risk: -2.8575, bag_size: 4987
+Epoch: 7, train_loss_surv: 0.9487, train_loss: 0.9487, train_c_index: 0.7405
+
+
+batch 99, loss: 0.0650, label: 1, event_time: 31.9300, risk: -3.2281, bag_size: 5045
+batch 199, loss: 1.4591, label: 2, event_time: 74.6700, risk: -2.4402, bag_size: 2637
+batch 299, loss: 0.0482, label: 1, event_time: 42.3100, risk: -3.3334, bag_size: 3989
+batch 399, loss: 0.7162, label: 2, event_time: 48.0000, risk: -2.0730, bag_size: 3956
+batch 499, loss: 1.0826, label: 1, event_time: 30.2600, risk: -1.2666, bag_size: 4656
+batch 599, loss: 0.7584, label: 3, event_time: 281.0800, risk: -3.3419, bag_size: 2946
+Epoch: 8, train_loss_surv: 0.9094, train_loss: 0.9094, train_c_index: 0.7606
+
+
+batch 99, loss: 0.2848, label: 0, event_time: 23.8800, risk: -2.3441, bag_size: 3671
+batch 199, loss: 0.4844, label: 3, event_time: 128.9800, risk: -3.2360, bag_size: 3997
+batch 299, loss: 1.1636, label: 3, event_time: 93.7600, risk: -2.8994, bag_size: 2384
+batch 399, loss: 1.1910, label: 3, event_time: 93.7600, risk: -2.5540, bag_size: 2384
+batch 499, loss: 0.4331, label: 1, event_time: 38.7300, risk: -2.2749, bag_size: 2852
+batch 599, loss: 0.3884, label: 2, event_time: 76.7100, risk: -3.0487, bag_size: 5341
+Epoch: 9, train_loss_surv: 0.8269, train_loss: 0.8269, train_c_index: 0.7950
+
+
+batch 99, loss: 1.1239, label: 3, event_time: 244.9100, risk: -2.6866, bag_size: 11725
+batch 199, loss: 1.3688, label: 3, event_time: 91.9200, risk: -3.1820, bag_size: 4987
+batch 299, loss: 0.5438, label: 0, event_time: 8.7400, risk: -0.8770, bag_size: 5638
+batch 399, loss: 1.3349, label: 1, event_time: 32.5600, risk: -2.3676, bag_size: 3207
+batch 499, loss: 0.2009, label: 1, event_time: 34.2300, risk: -2.8001, bag_size: 2757
+batch 599, loss: 2.3264, label: 3, event_time: 93.7600, risk: -1.1169, bag_size: 2384
+Epoch: 10, train_loss_surv: 0.7865, train_loss: 0.7865, train_c_index: 0.8071
+
+
+batch 99, loss: 0.0727, label: 1, event_time: 28.8400, risk: -3.3145, bag_size: 1846
+batch 199, loss: 0.2812, label: 3, event_time: 166.2900, risk: -3.6835, bag_size: 1527
+batch 299, loss: 0.2634, label: 1, event_time: 44.6500, risk: -2.5368, bag_size: 2070
+batch 399, loss: 0.9292, label: 0, event_time: 13.9900, risk: -1.0701, bag_size: 825
+batch 499, loss: 0.3673, label: 3, event_time: 129.4700, risk: -2.8961, bag_size: 3725
+batch 599, loss: 1.2334, label: 2, event_time: 46.3500, risk: -2.7310, bag_size: 3340
+Epoch: 11, train_loss_surv: 0.7062, train_loss: 0.7062, train_c_index: 0.8023
+
+
+batch 99, loss: 0.2977, label: 3, event_time: 233.4400, risk: -3.6764, bag_size: 590
+batch 199, loss: 0.0181, label: 2, event_time: 50.3300, risk: -3.7720, bag_size: 3965
+batch 299, loss: 1.4144, label: 1, event_time: 33.9700, risk: -2.4609, bag_size: 3795
+batch 399, loss: 1.6652, label: 2, event_time: 51.3500, risk: -3.1929, bag_size: 4224
+batch 499, loss: 0.3268, label: 2, event_time: 61.8900, risk: -2.1131, bag_size: 2392
+batch 599, loss: 0.2460, label: 2, event_time: 63.3000, risk: -2.2694, bag_size: 6811
+Epoch: 12, train_loss_surv: 0.5776, train_loss: 0.5776, train_c_index: 0.8585
+
+
+batch 99, loss: 0.8236, label: 1, event_time: 31.7700, risk: -1.8713, bag_size: 5333
+batch 199, loss: 0.8168, label: 1, event_time: 26.0200, risk: -1.6421, bag_size: 1356
+batch 299, loss: 0.1520, label: 0, event_time: 13.9600, risk: -2.3915, bag_size: 4076
+batch 399, loss: 0.2769, label: 0, event_time: 10.5800, risk: -0.6527, bag_size: 5491
+batch 499, loss: 1.6209, label: 3, event_time: 206.7000, risk: -3.0864, bag_size: 2775
+batch 599, loss: 0.2613, label: 0, event_time: 3.8100, risk: -0.3580, bag_size: 8188
+Epoch: 13, train_loss_surv: 0.5214, train_loss: 0.5214, train_c_index: 0.8576
+
+
+batch 99, loss: 0.2740, label: 2, event_time: 51.3500, risk: -2.3164, bag_size: 4224
+batch 199, loss: 0.1893, label: 0, event_time: 8.7400, risk: -0.2410, bag_size: 5638
+batch 299, loss: 0.0388, label: 2, event_time: 50.2000, risk: -3.7481, bag_size: 1812
+batch 399, loss: 0.0003, label: 1, event_time: 29.2400, risk: -3.4886, bag_size: 307
+batch 499, loss: 2.3963, label: 2, event_time: 59.7900, risk: -0.7383, bag_size: 4362
+batch 599, loss: 0.0021, label: 0, event_time: 9.9900, risk: -3.5380, bag_size: 1172
+Epoch: 14, train_loss_surv: 0.4494, train_loss: 0.4494, train_c_index: 0.8776
+
+
+batch 99, loss: 0.0008, label: 0, event_time: 14.1600, risk: -3.5414, bag_size: 3751
+batch 199, loss: 0.0009, label: 0, event_time: 13.6700, risk: -3.3357, bag_size: 2509
+batch 299, loss: 0.1961, label: 3, event_time: 97.4000, risk: -3.0752, bag_size: 4137
+batch 399, loss: 0.0035, label: 1, event_time: 25.8900, risk: -3.4709, bag_size: 4335
+batch 499, loss: 0.8906, label: 3, event_time: 105.2200, risk: -3.1712, bag_size: 3628
+batch 599, loss: 0.1247, label: 3, event_time: 99.2800, risk: -3.7883, bag_size: 2158
+Epoch: 15, train_loss_surv: 0.4250, train_loss: 0.4250, train_c_index: 0.8795
+
+
+batch 99, loss: 0.2361, label: 3, event_time: 81.5700, risk: -3.6659, bag_size: 4994
+batch 199, loss: 0.9267, label: 2, event_time: 46.3500, risk: -2.4793, bag_size: 3340
+batch 299, loss: 0.7363, label: 2, event_time: 74.6700, risk: -1.3400, bag_size: 2637
+batch 399, loss: 0.1315, label: 3, event_time: 83.2800, risk: -3.8534, bag_size: 2658
+batch 499, loss: 0.6616, label: 0, event_time: 20.1700, risk: -0.9918, bag_size: 2374
+batch 599, loss: 0.0111, label: 0, event_time: 20.3000, risk: -3.7833, bag_size: 3282
+Epoch: 16, train_loss_surv: 0.3740, train_loss: 0.3740, train_c_index: 0.8777
+
+
+batch 99, loss: 0.0027, label: 0, event_time: 0.2300, risk: -2.6370, bag_size: 1354
+batch 199, loss: 0.0000, label: 0, event_time: 12.4800, risk: -3.2621, bag_size: 2940
+batch 299, loss: 0.1504, label: 1, event_time: 32.0600, risk: -1.1627, bag_size: 2619
+batch 399, loss: 0.0678, label: 3, event_time: 127.2300, risk: -3.0130, bag_size: 9426
+batch 499, loss: 0.3435, label: 0, event_time: 5.1900, risk: -0.8993, bag_size: 7031
+batch 599, loss: 0.4359, label: 1, event_time: 44.8400, risk: -1.1519, bag_size: 3414
+Epoch: 17, train_loss_surv: 0.3540, train_loss: 0.3540, train_c_index: 0.8828
+
+
+batch 99, loss: 1.6740, label: 1, event_time: 32.9800, risk: -2.3387, bag_size: 3480
+batch 199, loss: 0.6456, label: 0, event_time: 23.7500, risk: -1.0098, bag_size: 5394
+batch 299, loss: 0.0098, label: 1, event_time: 40.5100, risk: -3.8060, bag_size: 3275
+batch 399, loss: 0.4707, label: 2, event_time: 54.1700, risk: -2.6714, bag_size: 2710
+batch 499, loss: 0.2103, label: 2, event_time: 49.4400, risk: -3.5478, bag_size: 3659
+batch 599, loss: 0.0895, label: 1, event_time: 30.9800, risk: -1.0518, bag_size: 914
+Epoch: 18, train_loss_surv: 0.3467, train_loss: 0.3467, train_c_index: 0.8799
+
+
+batch 99, loss: 0.2837, label: 0, event_time: 23.7500, risk: -0.5547, bag_size: 5394
+batch 199, loss: 0.1361, label: 3, event_time: 129.4700, risk: -3.1076, bag_size: 3725
+batch 299, loss: 0.2089, label: 1, event_time: 30.9800, risk: -1.3809, bag_size: 914
+batch 399, loss: 0.0531, label: 3, event_time: 101.5400, risk: -3.9439, bag_size: 2745
+batch 499, loss: 0.1600, label: 0, event_time: 20.2400, risk: -0.2545, bag_size: 5478
+batch 599, loss: 0.0010, label: 0, event_time: 21.2200, risk: -3.7869, bag_size: 4177
+Epoch: 19, train_loss_surv: 0.2876, train_loss: 0.2876, train_c_index: 0.9090
+Val c-Index: 0.7092
+
+Training Fold 3!
+
+Init train/val/test splits... 
+Done!
+Training on 605 samples
+Validating on 151 samples
+
+Init loss function... 
+Init Model... Done!
+MIL_Attention_FC_surv(
+  (attention_net): DataParallel(
+    (module): Sequential(
+      (0): Linear(in_features=768, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.25, inplace=False)
+      (3): Attn_Net_Gated(
+        (attention_a): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Tanh()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_b): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Sigmoid()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_c): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (rho): Sequential(
+    (0): Linear(in_features=512, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+  )
+  (classifier): Linear(in_features=256, out_features=4, bias=True)
+)
+Total number of parameters: 788997
+Total number of trainable parameters: 788997
+
+Init optimizer ... Done!
+
+Init Loaders... 
+
+Done!
+
+Setup EarlyStopping... 
+Setup Validation C-Index Monitor... Done!
+
+
+batch 99, loss: 2.5768, label: 3, event_time: 81.1100, risk: -1.0456, bag_size: 5667
+batch 199, loss: 2.3693, label: 3, event_time: 93.7600, risk: -1.2244, bag_size: 2384
+batch 299, loss: 0.8466, label: 1, event_time: 25.5300, risk: -1.5218, bag_size: 3630
+batch 399, loss: 1.4637, label: 1, event_time: 41.8900, risk: -1.9250, bag_size: 5566
+batch 499, loss: 1.7002, label: 2, event_time: 46.9800, risk: -2.3477, bag_size: 1834
+batch 599, loss: 1.7850, label: 2, event_time: 51.1200, risk: -2.7702, bag_size: 3824
+Epoch: 0, train_loss_surv: 1.3580, train_loss: 1.3580, train_c_index: 0.5095
+
+
+batch 99, loss: 0.0673, label: 0, event_time: 23.2300, risk: -2.8700, bag_size: 1182
+batch 199, loss: 0.2635, label: 1, event_time: 34.8900, risk: -2.6626, bag_size: 5385
+batch 299, loss: 0.1422, label: 0, event_time: 1.0200, risk: -2.4338, bag_size: 586
+batch 399, loss: 1.8748, label: 2, event_time: 51.1200, risk: -2.3346, bag_size: 3824
+batch 499, loss: 1.5501, label: 3, event_time: 107.8500, risk: -2.2770, bag_size: 2939
+batch 599, loss: 1.4793, label: 2, event_time: 54.9600, risk: -2.3699, bag_size: 6796
+Epoch: 1, train_loss_surv: 1.1972, train_loss: 1.1972, train_c_index: 0.5334
+
+
+batch 99, loss: 0.4759, label: 1, event_time: 26.1200, risk: -2.0687, bag_size: 4157
+batch 199, loss: 0.1841, label: 0, event_time: 14.4900, risk: -2.2126, bag_size: 4175
+batch 299, loss: 1.2497, label: 3, event_time: 134.3000, risk: -2.6150, bag_size: 2731
+batch 399, loss: 1.7223, label: 1, event_time: 25.7900, risk: -2.1222, bag_size: 1340
+batch 499, loss: 2.0991, label: 1, event_time: 44.8400, risk: -2.5168, bag_size: 3414
+batch 599, loss: 2.0671, label: 1, event_time: 32.0600, risk: -2.3704, bag_size: 2619
+Epoch: 2, train_loss_surv: 1.1132, train_loss: 1.1132, train_c_index: 0.5992
+
+
+batch 99, loss: 1.0443, label: 3, event_time: 161.9300, risk: -2.9119, bag_size: 8978
+batch 199, loss: 1.4788, label: 3, event_time: 107.1600, risk: -2.6828, bag_size: 1781
+batch 299, loss: 0.2693, label: 1, event_time: 30.4200, risk: -2.5641, bag_size: 1449
+batch 399, loss: 1.1171, label: 3, event_time: 169.3800, risk: -2.6209, bag_size: 7383
+batch 499, loss: 1.6268, label: 2, event_time: 77.1400, risk: -2.0324, bag_size: 4163
+batch 599, loss: 0.7439, label: 3, event_time: 99.1100, risk: -3.0314, bag_size: 1902
+Epoch: 3, train_loss_surv: 1.0459, train_loss: 1.0459, train_c_index: 0.6519
+
+
+batch 99, loss: 1.2982, label: 3, event_time: 102.6900, risk: -2.7526, bag_size: 4384
+batch 199, loss: 0.2040, label: 1, event_time: 31.8000, risk: -2.7394, bag_size: 5827
+batch 299, loss: 1.5850, label: 0, event_time: 8.7400, risk: -2.0666, bag_size: 5638
+batch 399, loss: 1.6313, label: 1, event_time: 30.2600, risk: -2.0834, bag_size: 4656
+batch 499, loss: 1.2212, label: 3, event_time: 79.4000, risk: -2.3035, bag_size: 4994
+batch 599, loss: 1.3582, label: 1, event_time: 41.8900, risk: -2.1189, bag_size: 5566
+Epoch: 4, train_loss_surv: 1.0852, train_loss: 1.0852, train_c_index: 0.6470
+
+
+batch 99, loss: 1.3421, label: 3, event_time: 88.5300, risk: -2.4778, bag_size: 1622
+batch 199, loss: 0.2070, label: 0, event_time: 12.6500, risk: -1.9539, bag_size: 4291
+batch 299, loss: 1.4753, label: 0, event_time: 8.7400, risk: -1.9768, bag_size: 5638
+batch 399, loss: 1.4732, label: 1, event_time: 38.5700, risk: -1.6048, bag_size: 4156
+batch 499, loss: 0.1568, label: 0, event_time: 1.6800, risk: -2.2491, bag_size: 491
+batch 599, loss: 1.6304, label: 2, event_time: 59.5300, risk: -2.8799, bag_size: 4651
+Epoch: 5, train_loss_surv: 1.0261, train_loss: 1.0261, train_c_index: 0.6979
+
+
+batch 99, loss: 1.3746, label: 3, event_time: 93.7600, risk: -2.6243, bag_size: 2384
+batch 199, loss: 0.1626, label: 2, event_time: 61.9900, risk: -3.3662, bag_size: 4204
+batch 299, loss: 1.1271, label: 3, event_time: 88.9300, risk: -2.4183, bag_size: 4135
+batch 399, loss: 1.2440, label: 1, event_time: 30.2600, risk: -1.5128, bag_size: 4656
+batch 499, loss: 1.0899, label: 1, event_time: 43.5000, risk: -1.8728, bag_size: 5772
+batch 599, loss: 0.1065, label: 1, event_time: 34.2300, risk: -3.0750, bag_size: 2757
+Epoch: 6, train_loss_surv: 0.9865, train_loss: 0.9865, train_c_index: 0.7270
+
+
+batch 99, loss: 1.3648, label: 3, event_time: 79.4000, risk: -2.3703, bag_size: 4994
+batch 199, loss: 1.2530, label: 2, event_time: 53.9400, risk: -2.5728, bag_size: 5238
+batch 299, loss: 0.3930, label: 1, event_time: 28.2500, risk: -1.9971, bag_size: 2146
+batch 399, loss: 0.3545, label: 2, event_time: 49.8000, risk: -2.8168, bag_size: 3355
+batch 499, loss: 2.3548, label: 1, event_time: 38.5700, risk: -2.2095, bag_size: 4156
+batch 599, loss: 0.3733, label: 2, event_time: 66.0000, risk: -1.9989, bag_size: 2367
+Epoch: 7, train_loss_surv: 0.8452, train_loss: 0.8452, train_c_index: 0.7746
+
+
+batch 99, loss: 3.5071, label: 0, event_time: 18.5000, risk: -3.3379, bag_size: 2885
+batch 199, loss: 1.5916, label: 1, event_time: 31.5000, risk: -2.3803, bag_size: 3343
+batch 299, loss: 3.4222, label: 1, event_time: 32.5600, risk: -3.3904, bag_size: 3207
+batch 399, loss: 0.0165, label: 0, event_time: 21.6500, risk: -3.7431, bag_size: 3946
+batch 499, loss: 0.0084, label: 0, event_time: 24.5400, risk: -3.5613, bag_size: 4006
+batch 599, loss: 1.1357, label: 3, event_time: 127.2300, risk: -2.0353, bag_size: 9426
+Epoch: 8, train_loss_surv: 0.8198, train_loss: 0.8198, train_c_index: 0.7646
+
+
+batch 99, loss: 0.5164, label: 0, event_time: 12.3900, risk: -1.1010, bag_size: 8819
+batch 199, loss: 0.3534, label: 3, event_time: 77.9600, risk: -3.1915, bag_size: 4394
+batch 299, loss: 0.3242, label: 2, event_time: 66.1000, risk: -2.9586, bag_size: 5081
+batch 399, loss: 0.3855, label: 2, event_time: 54.1700, risk: -2.2414, bag_size: 2710
+batch 499, loss: 0.1448, label: 1, event_time: 38.7300, risk: -3.1090, bag_size: 2852
+batch 599, loss: 0.0415, label: 1, event_time: 26.9100, risk: -3.4659, bag_size: 3073
+Epoch: 9, train_loss_surv: 0.7109, train_loss: 0.7109, train_c_index: 0.7908
+
+
+batch 99, loss: 0.5579, label: 3, event_time: 244.9100, risk: -2.7257, bag_size: 11725
+batch 199, loss: 0.2846, label: 2, event_time: 66.0000, risk: -1.9574, bag_size: 2367
+batch 299, loss: 0.4046, label: 0, event_time: 8.7400, risk: -0.8202, bag_size: 5638
+batch 399, loss: 0.0019, label: 0, event_time: 2.5600, risk: -3.5413, bag_size: 4693
+batch 499, loss: 3.1490, label: 0, event_time: 18.5000, risk: -3.3488, bag_size: 2885
+batch 599, loss: 0.6112, label: 2, event_time: 54.1700, risk: -2.7134, bag_size: 2710
+Epoch: 10, train_loss_surv: 0.7253, train_loss: 0.7253, train_c_index: 0.7938
+
+
+batch 99, loss: 0.0851, label: 1, event_time: 44.6500, risk: -3.2210, bag_size: 2070
+batch 199, loss: 0.0566, label: 1, event_time: 38.9300, risk: -3.3799, bag_size: 3282
+batch 299, loss: 0.0141, label: 1, event_time: 38.2100, risk: -3.5052, bag_size: 6029
+batch 399, loss: 0.0392, label: 2, event_time: 74.0800, risk: -3.7431, bag_size: 273
+batch 499, loss: 0.4125, label: 3, event_time: 127.2300, risk: -2.7174, bag_size: 9426
+batch 599, loss: 0.1421, label: 2, event_time: 77.6900, risk: -3.1120, bag_size: 3554
+Epoch: 11, train_loss_surv: 0.5462, train_loss: 0.5462, train_c_index: 0.8466
+
+
+batch 99, loss: 0.2671, label: 3, event_time: 81.1100, risk: -3.2096, bag_size: 5667
+batch 199, loss: 0.2832, label: 2, event_time: 47.2700, risk: -1.8647, bag_size: 2846
+batch 299, loss: 0.5791, label: 3, event_time: 89.0900, risk: -3.3079, bag_size: 5949
+batch 399, loss: 0.4967, label: 1, event_time: 30.2600, risk: -1.4461, bag_size: 4656
+batch 499, loss: 0.2072, label: 3, event_time: 118.3600, risk: -3.7773, bag_size: 2702
+batch 599, loss: 0.5445, label: 2, event_time: 74.6700, risk: -1.7418, bag_size: 2637
+Epoch: 12, train_loss_surv: 0.5625, train_loss: 0.5625, train_c_index: 0.8240
+
+
+batch 99, loss: 0.1544, label: 1, event_time: 31.7700, risk: -1.1585, bag_size: 5333
+batch 199, loss: 1.0773, label: 0, event_time: 19.7100, risk: -0.7471, bag_size: 4952
+batch 299, loss: 0.0224, label: 0, event_time: 17.4800, risk: -3.5799, bag_size: 10921
+batch 399, loss: 0.2442, label: 0, event_time: 11.8900, risk: -0.5978, bag_size: 8188
+batch 499, loss: 0.1220, label: 3, event_time: 113.7000, risk: -2.9844, bag_size: 5128
+batch 599, loss: 0.4660, label: 0, event_time: 3.8100, risk: -0.8907, bag_size: 8188
+Epoch: 13, train_loss_surv: 0.4396, train_loss: 0.4396, train_c_index: 0.8744
+
+
+batch 99, loss: 0.2376, label: 0, event_time: 20.1100, risk: -0.4865, bag_size: 5594
+batch 199, loss: 0.3203, label: 0, event_time: 8.7400, risk: -0.7271, bag_size: 5638
+batch 299, loss: 0.0598, label: 3, event_time: 98.2600, risk: -3.9194, bag_size: 1610
+batch 399, loss: 0.2524, label: 3, event_time: 95.6300, risk: -3.1211, bag_size: 2956
+batch 499, loss: 0.0230, label: 2, event_time: 62.8800, risk: -3.7387, bag_size: 4515
+batch 599, loss: 0.0000, label: 0, event_time: 0.9900, risk: -3.2884, bag_size: 608
+Epoch: 14, train_loss_surv: 0.3519, train_loss: 0.3519, train_c_index: 0.8932
+
+
+batch 99, loss: 0.0003, label: 0, event_time: 17.4800, risk: -3.8713, bag_size: 10921
+batch 199, loss: 0.0615, label: 1, event_time: 31.7700, risk: -1.0756, bag_size: 5333
+batch 299, loss: 0.6902, label: 1, event_time: 25.7900, risk: -1.4694, bag_size: 1340
+batch 399, loss: 0.4120, label: 1, event_time: 40.3700, risk: -1.7344, bag_size: 7286
+batch 499, loss: 0.1091, label: 0, event_time: 20.2400, risk: -0.3562, bag_size: 5478
+batch 599, loss: 1.6100, label: 0, event_time: 7.9500, risk: -0.5552, bag_size: 2482
+Epoch: 15, train_loss_surv: 0.3333, train_loss: 0.3333, train_c_index: 0.9004
+
+
+batch 99, loss: 0.1291, label: 3, event_time: 81.5700, risk: -3.8076, bag_size: 4994
+batch 199, loss: 0.0373, label: 2, event_time: 77.8900, risk: -3.5892, bag_size: 4968
+batch 299, loss: 1.0327, label: 3, event_time: 89.0900, risk: -3.4410, bag_size: 5949
+batch 399, loss: 0.0059, label: 0, event_time: 10.5100, risk: -3.5325, bag_size: 5152
+batch 499, loss: 0.2730, label: 0, event_time: 20.1700, risk: -0.5157, bag_size: 2374
+batch 599, loss: 0.0006, label: 0, event_time: 17.7700, risk: -3.9113, bag_size: 4384
+Epoch: 16, train_loss_surv: 0.3064, train_loss: 0.3064, train_c_index: 0.8829
+
+
+batch 99, loss: 0.0262, label: 2, event_time: 69.7800, risk: -3.1141, bag_size: 3426
+batch 199, loss: 0.6669, label: 0, event_time: 12.6500, risk: -1.0800, bag_size: 2982
+batch 299, loss: 0.1964, label: 1, event_time: 32.0600, risk: -1.2217, bag_size: 2619
+batch 399, loss: 0.1017, label: 3, event_time: 77.9600, risk: -3.0476, bag_size: 4394
+batch 499, loss: 0.2330, label: 2, event_time: 77.1400, risk: -1.7976, bag_size: 4163
+batch 599, loss: 0.0135, label: 2, event_time: 61.8900, risk: -2.0122, bag_size: 2392
+Epoch: 17, train_loss_surv: 0.2594, train_loss: 0.2594, train_c_index: 0.9124
+
+
+batch 99, loss: 0.0017, label: 1, event_time: 28.4800, risk: -3.6901, bag_size: 3052
+batch 199, loss: 0.0007, label: 0, event_time: 17.5100, risk: -2.7582, bag_size: 5233
+batch 299, loss: 1.3741, label: 3, event_time: 281.0800, risk: -3.2469, bag_size: 2946
+batch 399, loss: 0.0577, label: 2, event_time: 77.5600, risk: -2.0140, bag_size: 4841
+batch 499, loss: 0.1190, label: 1, event_time: 44.8400, risk: -1.1594, bag_size: 3414
+batch 599, loss: 0.1067, label: 1, event_time: 29.0100, risk: -1.2242, bag_size: 248
+Epoch: 18, train_loss_surv: 0.2379, train_loss: 0.2379, train_c_index: 0.9110
+
+
+batch 99, loss: 0.0000, label: 0, event_time: 17.1200, risk: -3.9594, bag_size: 2669
+batch 199, loss: 0.0988, label: 3, event_time: 128.9800, risk: -3.0812, bag_size: 3997
+batch 299, loss: 0.0745, label: 1, event_time: 29.0100, risk: -1.1494, bag_size: 248
+batch 399, loss: 0.2317, label: 2, event_time: 59.5300, risk: -1.9975, bag_size: 4651
+batch 499, loss: 0.0373, label: 0, event_time: 10.5800, risk: -0.1241, bag_size: 5491
+batch 599, loss: 0.0494, label: 3, event_time: 101.5400, risk: -3.9305, bag_size: 2745
+Epoch: 19, train_loss_surv: 0.2387, train_loss: 0.2387, train_c_index: 0.9080
+Val c-Index: 0.5909
+
+Training Fold 4!
+
+Init train/val/test splits... 
+Done!
+Training on 605 samples
+Validating on 151 samples
+
+Init loss function... 
+Init Model... Done!
+MIL_Attention_FC_surv(
+  (attention_net): DataParallel(
+    (module): Sequential(
+      (0): Linear(in_features=768, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.25, inplace=False)
+      (3): Attn_Net_Gated(
+        (attention_a): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Tanh()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_b): Sequential(
+          (0): Linear(in_features=512, out_features=256, bias=True)
+          (1): Sigmoid()
+          (2): Dropout(p=0.25, inplace=False)
+        )
+        (attention_c): Linear(in_features=256, out_features=1, bias=True)
+      )
+    )
+  )
+  (rho): Sequential(
+    (0): Linear(in_features=512, out_features=256, bias=True)
+    (1): ReLU()
+    (2): Dropout(p=0.25, inplace=False)
+  )
+  (classifier): Linear(in_features=256, out_features=4, bias=True)
+)
+Total number of parameters: 788997
+Total number of trainable parameters: 788997
+
+Init optimizer ... Done!
+
+Init Loaders... 
+
+Done!
+
+Setup EarlyStopping... 
+Setup Validation C-Index Monitor... Done!
+
+
+batch 99, loss: 2.6243, label: 3, event_time: 212.0900, risk: -1.0254, bag_size: 6271
+batch 199, loss: 2.4060, label: 3, event_time: 93.2300, risk: -1.2079, bag_size: 4286
+batch 299, loss: 1.3937, label: 2, event_time: 77.6900, risk: -1.4839, bag_size: 3554
+batch 399, loss: 0.2500, label: 0, event_time: 17.3500, risk: -1.7895, bag_size: 939
+batch 499, loss: 1.3361, label: 3, event_time: 86.8900, risk: -2.4393, bag_size: 594
+batch 599, loss: 2.1851, label: 2, event_time: 55.6500, risk: -2.6586, bag_size: 4130
+Epoch: 0, train_loss_surv: 1.3719, train_loss: 1.3719, train_c_index: 0.4954
+
+
+batch 99, loss: 0.1737, label: 1, event_time: 27.0000, risk: -2.9709, bag_size: 350
+batch 199, loss: 0.3630, label: 1, event_time: 35.7400, risk: -2.3835, bag_size: 1439
+batch 299, loss: 0.3458, label: 1, event_time: 42.9700, risk: -2.4172, bag_size: 547
+batch 399, loss: 1.8808, label: 2, event_time: 49.5400, risk: -2.3011, bag_size: 4853
+batch 499, loss: 1.6816, label: 3, event_time: 101.6400, risk: -2.1553, bag_size: 2741
+batch 599, loss: 1.7699, label: 2, event_time: 54.9600, risk: -2.2702, bag_size: 6796
+Epoch: 1, train_loss_surv: 1.2632, train_loss: 1.2632, train_c_index: 0.5109
+
+
+batch 99, loss: 1.3917, label: 3, event_time: 83.2500, risk: -2.1365, bag_size: 3521
+batch 199, loss: 0.7249, label: 2, event_time: 58.5700, risk: -2.1966, bag_size: 4235
+batch 299, loss: 1.4125, label: 3, event_time: 79.7000, risk: -2.3114, bag_size: 3751
+batch 399, loss: 2.1716, label: 1, event_time: 31.5000, risk: -2.4005, bag_size: 3343
+batch 499, loss: 2.2029, label: 0, event_time: 8.3800, risk: -2.4415, bag_size: 6496
+batch 599, loss: 0.2581, label: 1, event_time: 42.2100, risk: -2.4748, bag_size: 3701
+Epoch: 2, train_loss_surv: 1.1420, train_loss: 1.1420, train_c_index: 0.6300
+
+
+batch 99, loss: 1.2036, label: 3, event_time: 77.9600, risk: -2.3863, bag_size: 4394
+batch 199, loss: 1.0993, label: 3, event_time: 97.0100, risk: -2.4407, bag_size: 3761
+batch 299, loss: 2.3755, label: 0, event_time: 7.8500, risk: -2.4849, bag_size: 6974
+batch 399, loss: 1.3003, label: 3, event_time: 140.1800, risk: -2.6488, bag_size: 3754
+batch 499, loss: 0.5124, label: 2, event_time: 75.2000, risk: -2.5654, bag_size: 3700
+batch 599, loss: 1.8267, label: 1, event_time: 27.1000, risk: -2.3557, bag_size: 5712
+Epoch: 3, train_loss_surv: 1.0990, train_loss: 1.0990, train_c_index: 0.6533
+
+
+batch 99, loss: 1.4376, label: 3, event_time: 77.9600, risk: -2.2786, bag_size: 4394
+batch 199, loss: 0.0390, label: 0, event_time: 24.7000, risk: -3.2060, bag_size: 2919
+batch 299, loss: 0.1450, label: 1, event_time: 34.5300, risk: -2.9309, bag_size: 4633
+batch 399, loss: 1.5648, label: 0, event_time: 7.3600, risk: -2.1451, bag_size: 7183
+batch 499, loss: 2.1610, label: 0, event_time: 18.3300, risk: -2.5299, bag_size: 7602
+batch 599, loss: 0.2396, label: 1, event_time: 26.0200, risk: -2.5895, bag_size: 1356
+Epoch: 4, train_loss_surv: 1.0779, train_loss: 1.0779, train_c_index: 0.6623
+
+
+batch 99, loss: 1.3738, label: 2, event_time: 77.1400, risk: -1.8424, bag_size: 4163
+batch 199, loss: 0.1647, label: 0, event_time: 12.4800, risk: -2.3669, bag_size: 2940
+batch 299, loss: 0.1160, label: 1, event_time: 30.5800, risk: -2.9135, bag_size: 5858
+batch 399, loss: 1.5414, label: 3, event_time: 83.2500, risk: -2.4819, bag_size: 3521
+batch 499, loss: 2.1395, label: 0, event_time: 5.7200, risk: -2.5391, bag_size: 400
+batch 599, loss: 0.5069, label: 2, event_time: 69.2500, risk: -2.6402, bag_size: 2697
+Epoch: 5, train_loss_surv: 1.0436, train_loss: 1.0436, train_c_index: 0.6991
+
+
+batch 99, loss: 0.7135, label: 3, event_time: 93.2300, risk: -3.1844, bag_size: 4286
+batch 199, loss: 2.0057, label: 2, event_time: 58.9000, risk: -3.3550, bag_size: 3201
+batch 299, loss: 1.1212, label: 3, event_time: 105.2200, risk: -2.7178, bag_size: 3628
+batch 399, loss: 1.1721, label: 0, event_time: 7.3600, risk: -1.4256, bag_size: 7183
+batch 499, loss: 1.4094, label: 2, event_time: 46.3500, risk: -1.9419, bag_size: 3340
+batch 599, loss: 0.2385, label: 2, event_time: 63.5700, risk: -3.1344, bag_size: 4533
+Epoch: 6, train_loss_surv: 0.9277, train_loss: 0.9277, train_c_index: 0.7553
+
+
+batch 99, loss: 1.8357, label: 0, event_time: 18.3300, risk: -2.1886, bag_size: 7602
+batch 199, loss: 2.1704, label: 2, event_time: 55.4500, risk: -3.2900, bag_size: 2218
+batch 299, loss: 1.4216, label: 1, event_time: 34.4300, risk: -2.0688, bag_size: 2294
+batch 399, loss: 0.4166, label: 2, event_time: 49.8000, risk: -2.7068, bag_size: 3355
+batch 499, loss: 1.5859, label: 3, event_time: 83.2500, risk: -2.7386, bag_size: 3521
+batch 599, loss: 1.5700, label: 3, event_time: 91.9200, risk: -2.8080, bag_size: 4987
+Epoch: 7, train_loss_surv: 0.9088, train_loss: 0.9088, train_c_index: 0.7681
+
+
+batch 99, loss: 0.0768, label: 0, event_time: 23.8500, risk: -2.8616, bag_size: 3078
+batch 199, loss: 1.0993, label: 3, event_time: 97.4000, risk: -2.8157, bag_size: 4137
+batch 299, loss: 0.9951, label: 1, event_time: 30.2600, risk: -1.8945, bag_size: 4656
+batch 399, loss: 0.1988, label: 2, event_time: 48.0000, risk: -2.9957, bag_size: 3956
+batch 499, loss: 1.6731, label: 2, event_time: 55.5800, risk: -1.2911, bag_size: 4614
+batch 599, loss: 1.1671, label: 3, event_time: 127.2300, risk: -2.3716, bag_size: 9426
+Epoch: 8, train_loss_surv: 0.8360, train_loss: 0.8360, train_c_index: 0.7672
+
+
+batch 99, loss: 0.0085, label: 0, event_time: 18.1300, risk: -3.3658, bag_size: 9068
+batch 199, loss: 1.2450, label: 3, event_time: 81.1100, risk: -3.2440, bag_size: 5667
+batch 299, loss: 1.1780, label: 2, event_time: 54.1700, risk: -2.6987, bag_size: 2710
+batch 399, loss: 0.6350, label: 2, event_time: 54.1700, risk: -2.4716, bag_size: 2710
+batch 499, loss: 0.0375, label: 0, event_time: 6.1100, risk: -1.7023, bag_size: 2254
+batch 599, loss: 0.0560, label: 2, event_time: 65.0500, risk: -3.5372, bag_size: 3065
+Epoch: 9, train_loss_surv: 0.7672, train_loss: 0.7672, train_c_index: 0.7990
+
+
+batch 99, loss: 0.4855, label: 3, event_time: 81.5700, risk: -3.4993, bag_size: 4994
+batch 199, loss: 1.0996, label: 3, event_time: 91.9200, risk: -3.2029, bag_size: 4987
+batch 299, loss: 0.0062, label: 1, event_time: 34.8900, risk: -3.8512, bag_size: 5385
+batch 399, loss: 0.0050, label: 1, event_time: 42.3100, risk: -3.7884, bag_size: 3989
+batch 499, loss: 0.2263, label: 2, event_time: 69.9100, risk: -3.1250, bag_size: 6098
+batch 599, loss: 0.7681, label: 2, event_time: 54.1700, risk: -2.6791, bag_size: 2710
+Epoch: 10, train_loss_surv: 0.7278, train_loss: 0.7278, train_c_index: 0.8085
+
+
+batch 99, loss: 3.5116, label: 0, event_time: 18.5000, risk: -3.4615, bag_size: 2885
+batch 199, loss: 0.0180, label: 1, event_time: 40.5100, risk: -3.5360, bag_size: 3275
+batch 299, loss: 1.8060, label: 0, event_time: 18.5000, risk: -2.4113, bag_size: 2885
+batch 399, loss: 0.6555, label: 0, event_time: 13.9900, risk: -0.6770, bag_size: 825
+batch 499, loss: 0.3388, label: 3, event_time: 127.2300, risk: -2.8778, bag_size: 9426
+batch 599, loss: 0.1100, label: 2, event_time: 67.8100, risk: -3.4719, bag_size: 5960
+Epoch: 11, train_loss_surv: 0.7130, train_loss: 0.7130, train_c_index: 0.8145
+
+
+batch 99, loss: 0.5797, label: 3, event_time: 212.0900, risk: -2.7728, bag_size: 6271
+batch 199, loss: 1.3290, label: 1, event_time: 29.9600, risk: -0.9279, bag_size: 4247
+batch 299, loss: 0.6373, label: 3, event_time: 97.4000, risk: -3.2702, bag_size: 4137
+batch 399, loss: 1.1217, label: 0, event_time: 7.3600, risk: -2.0193, bag_size: 7183
+batch 499, loss: 0.0133, label: 1, event_time: 31.8000, risk: -3.6424, bag_size: 5827
+batch 599, loss: 0.6857, label: 3, event_time: 122.7300, risk: -3.0166, bag_size: 2934
+Epoch: 12, train_loss_surv: 0.5758, train_loss: 0.5758, train_c_index: 0.8389
+
+
+batch 99, loss: 0.2269, label: 1, event_time: 31.7700, risk: -1.2341, bag_size: 5333
+batch 199, loss: 0.3074, label: 2, event_time: 46.9800, risk: -2.2655, bag_size: 1834
+batch 299, loss: 0.1160, label: 0, event_time: 13.9600, risk: -3.0288, bag_size: 4076
+batch 399, loss: 0.3962, label: 0, event_time: 11.8900, risk: -0.4958, bag_size: 8188
+batch 499, loss: 0.0269, label: 2, event_time: 59.7900, risk: -3.3807, bag_size: 4362
+batch 599, loss: 0.3540, label: 0, event_time: 3.8100, risk: -0.4690, bag_size: 8188
+Epoch: 13, train_loss_surv: 0.5340, train_loss: 0.5340, train_c_index: 0.8555
+
+
+batch 99, loss: 0.2739, label: 0, event_time: 7.3600, risk: -0.4280, bag_size: 7183
+batch 199, loss: 0.0162, label: 1, event_time: 34.2600, risk: -3.8026, bag_size: 2567
+batch 299, loss: 0.7052, label: 3, event_time: 115.1800, risk: -3.4698, bag_size: 3424
+batch 399, loss: 0.1337, label: 0, event_time: 7.3600, risk: -2.9350, bag_size: 4307
+batch 499, loss: 0.0102, label: 2, event_time: 76.5400, risk: -3.3199, bag_size: 2611
+batch 599, loss: 0.0108, label: 2, event_time: 53.9400, risk: -3.1035, bag_size: 951
+Epoch: 14, train_loss_surv: 0.4351, train_loss: 0.4351, train_c_index: 0.8693
+
+
+batch 99, loss: 0.0321, label: 0, event_time: 14.1600, risk: -3.2051, bag_size: 3751
+batch 199, loss: 0.0763, label: 1, event_time: 31.7700, risk: -1.0927, bag_size: 5333
+batch 299, loss: 0.5590, label: 1, event_time: 31.5000, risk: -1.0529, bag_size: 3343
+batch 399, loss: 0.0036, label: 0, event_time: 15.2100, risk: -3.5576, bag_size: 4889
+batch 499, loss: 1.4415, label: 3, event_time: 93.7600, risk: -3.6056, bag_size: 2384
+batch 599, loss: 0.2942, label: 2, event_time: 60.8700, risk: -3.3345, bag_size: 320
+Epoch: 15, train_loss_surv: 0.3706, train_loss: 0.3706, train_c_index: 0.8791
+
+
+batch 99, loss: 1.3503, label: 2, event_time: 46.3500, risk: -1.3345, bag_size: 3340
+batch 199, loss: 0.0167, label: 2, event_time: 70.8300, risk: -3.5219, bag_size: 5501
+batch 299, loss: 0.2542, label: 3, event_time: 97.4000, risk: -2.8029, bag_size: 4137
+batch 399, loss: 0.4094, label: 3, event_time: 79.0400, risk: -3.6498, bag_size: 2772
+batch 499, loss: 0.1735, label: 1, event_time: 31.7000, risk: -3.1832, bag_size: 3841
+batch 599, loss: 0.2714, label: 2, event_time: 76.7100, risk: -3.3794, bag_size: 5341
+Epoch: 16, train_loss_surv: 0.3603, train_loss: 0.3603, train_c_index: 0.8636
+
+
+batch 99, loss: 0.0087, label: 0, event_time: 12.3200, risk: -3.4920, bag_size: 1581
+batch 199, loss: 0.0000, label: 0, event_time: 12.5500, risk: -3.5006, bag_size: 3425
+batch 299, loss: 0.4253, label: 1, event_time: 40.7000, risk: -2.3759, bag_size: 3711
+batch 399, loss: 0.6231, label: 3, event_time: 81.1100, risk: -3.4445, bag_size: 5667
+batch 499, loss: 0.0755, label: 0, event_time: 5.1900, risk: -0.1042, bag_size: 7031
+batch 599, loss: 0.1113, label: 1, event_time: 27.1000, risk: -1.1323, bag_size: 5712
+Epoch: 17, train_loss_surv: 0.3048, train_loss: 0.3048, train_c_index: 0.8873
+
+
+batch 99, loss: 0.0710, label: 2, event_time: 70.3000, risk: -3.6823, bag_size: 5828
+batch 199, loss: 0.4431, label: 0, event_time: 8.3800, risk: -0.3816, bag_size: 6496
+batch 299, loss: 0.1656, label: 0, event_time: 11.8900, risk: -0.1766, bag_size: 8188
+batch 399, loss: 0.4974, label: 2, event_time: 77.5600, risk: -2.5488, bag_size: 4841
+batch 499, loss: 0.1125, label: 0, event_time: 8.3800, risk: -0.1099, bag_size: 6496
+batch 599, loss: 0.4245, label: 1, event_time: 29.0100, risk: -1.7332, bag_size: 248
+Epoch: 18, train_loss_surv: 0.3220, train_loss: 0.3220, train_c_index: 0.8924
+
+
+batch 99, loss: 0.0212, label: 2, event_time: 49.8000, risk: -3.5558, bag_size: 3355
+batch 199, loss: 0.1596, label: 3, event_time: 127.2300, risk: -3.1259, bag_size: 9426
+batch 299, loss: 0.0373, label: 1, event_time: 29.0100, risk: -1.0619, bag_size: 248
+batch 399, loss: 0.2879, label: 2, event_time: 62.4200, risk: -1.7688, bag_size: 2055
+batch 499, loss: 0.0296, label: 2, event_time: 73.2900, risk: -3.8591, bag_size: 3309
+batch 599, loss: 0.1104, label: 0, event_time: 7.4600, risk: -0.2282, bag_size: 1274
+Epoch: 19, train_loss_surv: 0.2262, train_loss: 0.2262, train_c_index: 0.9128
+Val c-Index: 0.5439
