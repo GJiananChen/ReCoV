@@ -27,27 +27,29 @@ def calc_qwk_metric(pred_probs, test_labels):
     """
     based on the logic that predictions near the true should be penalized less
     """
-    test_index = np.stack((np.arange(len(test_labels)),test_labels))
-    highest_index = np.argsort(pred_probs,axis=1)[:,-1]
-    p_true = pred_probs[test_index[0,:],test_index[1,:]]
-    p_pred = pred_probs[test_index[0,:],highest_index]
-    pred_dist = np.abs(highest_index-test_labels)
-    return p_true - pred_dist*p_pred
+    # test_index = np.stack((np.arange(len(test_labels)),test_labels))
+    # highest_index = np.argsort(pred_probs,axis=1)[:,-1]
+    # p_true = pred_probs[test_index[0,:],test_index[1,:]]
+    # p_pred = pred_probs[test_index[0,:],highest_index]
+    # pred_dist = np.abs(highest_index-test_labels)
+    # return p_true - pred_dist*p_pred
+    predicted = np.sum(pred_probs,axis=1)
+    return np.abs(predicted - test_labels)
 
-def calc_margin(pred_probs, test_labels):
-    # order = np.arange(len(test_labels))
-    # temp = np.argsort(pred_probs,axis=1)
-    # return 1 - (pred_probs[order,temp[:,-1]] - pred_probs[order,temp[:,-2]])
-    test_index = np.stack((np.arange(len(test_labels)),test_labels))
-    highest_index = np.argsort(pred_probs,axis=1)[:,-1]
-    return pred_probs[test_index[0,:],test_index[1,:]] - pred_probs[test_index[0,:],highest_index]
+# def calc_margin(pred_probs, test_labels):
+#     # order = np.arange(len(test_labels))
+#     # temp = np.argsort(pred_probs,axis=1)
+#     # return 1 - (pred_probs[order,temp[:,-1]] - pred_probs[order,temp[:,-2]])
+#     test_index = np.stack((np.arange(len(test_labels)),test_labels))
+#     highest_index = np.argsort(pred_probs,axis=1)[:,-1]
+#     return pred_probs[test_index[0,:],test_index[1,:]] - pred_probs[test_index[0,:],highest_index]
 
-def calc_likelihood(pred_probs_all,test_labels_all):
-    idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
-    temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
-    return temp
+# def calc_likelihood(pred_probs_all,test_labels_all):
+#     idx_temp = np.stack((np.arange(len(test_labels_all)),test_labels_all))
+#     temp =  pred_probs_all[idx_temp[0,:],idx_temp[1,:]]
+#     return temp
 
-def rank_weights(test_metrics, test_ids, pred_probs, test_labels, memory, lamda=[0,0,0,1])->np.array:
+def rank_weights(test_metrics, test_ids, pred_probs, test_labels, memory, lamda = [1,0])->np.array:
     '''
     Gives weighting to all the samples in the dataset
     High weight implies more probability of being selected in the top fold
@@ -60,12 +62,13 @@ def rank_weights(test_metrics, test_ids, pred_probs, test_labels, memory, lamda=
     number_ids = [len(i) for i in test_ids]
     weights_auc = np.concatenate([[test_metrics[i]]*number_ids[i] for i in range(n_folds)])
     #likelihood
-    weights_likelihood = calc_likelihood(pred_probs_all,test_labels_all)
-    weights_margin = calc_margin(pred_probs_all,test_labels_all) + 1
-    weights_qwk = calc_qwk_metric(pred_probs_all,test_labels_all) + 5
-    weights = lamda[0]*weights_likelihood + lamda[1]*weights_margin + lamda[2]*weights_auc + lamda[3]*weights_qwk
+    # weights_likelihood = calc_likelihood(pred_probs_all,test_labels_all)
+    # weights_margin = calc_margin(pred_probs_all,test_labels_all) + 1
+    weights_qwk = 5 - calc_qwk_metric(pred_probs_all,test_labels_all)
+    weights = lamda[0]*weights_qwk + lamda[1]*weights_auc
+    # weights = lamda[0]*weights_likelihood + lamda[1]*weights_margin + lamda[2]*weights_auc + lamda[3]*weights_qwk
     weights = weights[np.argsort(test_ids_all)]
-    memory = 0.3*weights + 0.7*memory
+    memory = 0.5*weights + 0.5*memory
     return memory
 
 def plot_weights(x,noise_labels):
@@ -93,7 +96,8 @@ def train_one_run(fold_splits, fulltraindataset, args, filter_noise, noisy_idx=[
     image_ids_folds = []
     for fold, (train_ids, test_ids) in enumerate(fold_splits):
         #model defination
-        model = TransMIL_peg(n_classes=args.num_classes)
+        # model = TransMIL_peg(n_classes=6)
+        model = TransMIL_peg(n_classes=args.num_classes-1)
         if filter_noise and len(noisy_idx)>0 and (args.noisy_drop>0):
             #select 80% indice to drop randomly
             drop_idx = np.random.permutation(noisy_idx)[:int(args.noisy_drop*len(noisy_idx))]
@@ -119,11 +123,11 @@ parser.add_argument('--csv_path', type=str, default='/aippmdata/public/PANDAS')
 parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
 #model settings
 parser.add_argument('--num_classes',type=int, default=6)
-parser.add_argument('--lr',type=float,default=2e-4)
+parser.add_argument('--lr',type=float,default=1e-4)
 parser.add_argument('--lamda', type=float, default=0.0005, help="weight decay to use in adam optimizer")
 parser.add_argument('--patience', type=int, default=10, help="number of epochs to wait in reducelronplateu lr scheduler")
 parser.add_argument('--num_epochs', type=int, default=15)
-parser.add_argument('--batch_size', type=int, default=128)
+parser.add_argument('--batch_size', type=int, default=64)
 #recov settings
 parser.add_argument('--recov_runs',type=int, default=20,help="number of recov runs")
 parser.add_argument('--n_folds',type=int,default=5)
@@ -140,10 +144,12 @@ TAU = args.tau
 RANDOM_STATE = args.seed
 NOISY_DROP = args.noisy_drop
 FILTER_NOISE = args.filter_noise
-TOP_K = 400
+TOP_K = 500
 # LAMDA = [1,0,1]
-LAMDA = [0,0,0,1]
-EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_{TAU}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}"
+# LAMDA = [0,0,0,1]
+LAMDA = [1,0]
+# EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}"
+EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}_changemem"
 (X_train_clean,y_train_clean),(X_val_clean,y_val_clean),(X_test_clean,y_test_clean), _ = preprocess_data(args)
 
 X_train_clean["isup_grade"] = y_train_clean
@@ -171,10 +177,12 @@ for run in range(N_RUNS):
     # rank the ids
     memory = rank_weights(test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds, memory,lamda=LAMDA)
     # Generate new set of folds based on weights
-    fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
+    # fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
+    kfold = StratifiedKFold(n_splits=args.n_folds, shuffle=True, random_state=args.seed + run + 1)
+    fold_splits = list(kfold.split(train_split["int_id"].values, train_split["isup_grade"].values))
     # Get K worst samples for dropping from training
     # noise_set = np.argsort(memory)[:TOP_K]
     identified = np.argsort(memory)[:TOP_K]
     plot_weights(memory, (train_split["data_provider"]=="radboud"))
-    with open(str(file_loc/f"results/pandas/memory_{EXP_NAME}.npy"),"wb") as file:
+    with open(str(file_loc/f"results/pandas/memory_{EXP_NAME}_v2.npy"),"wb") as file:
         np.save(file,memory)

@@ -24,6 +24,7 @@ class Pandas_Dataset(Dataset):
         super().__init__()
         self.data_dir = Path(data_dir)
         self.data_df = data_df
+        self.n_classes = self.data_df["isup_grade"].max() + 1
         # self.data_list = data_list
         # self.data_set = []
         # for i in range(len(self.data_df)):
@@ -38,9 +39,12 @@ class Pandas_Dataset(Dataset):
 
     def __getitem__(self, index):
         # int_id,image_id, data, label = self.data_set[index]
+        label = int(self.data_df.iloc[index]["isup_grade"])
+        target = torch.zeros(size=(1,self.n_classes-1))
+        target[:,:label] = 1
         return {"id":self.data_df.iloc[index]["int_id"],
                 "image":self.data_df.iloc[index]["data"],
-                "label":int(self.data_df.iloc[index]["isup_grade"])}
+                "label":target}
 
     def get_sample_weights(self):
         class_weights = self.data_df["isup_grade"].value_counts()

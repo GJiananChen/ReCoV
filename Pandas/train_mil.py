@@ -22,6 +22,11 @@ import torchmetrics
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from warmup_scheduler import GradualWarmupScheduler
+
+#constants for cosine scheduler
+WARMUP_FACTOR = 10 
+WARMUP_EGO = 1
 
 def train_one_epoch(model, trainloader, optimizer, lossfun, metricfun, DEVICE, verbosity=False):
     running_loss = 0.0
@@ -41,26 +46,31 @@ def train_one_epoch(model, trainloader, optimizer, lossfun, metricfun, DEVICE, v
             logits_store.append(logits)
         logits = torch.cat(logits_store)
         #compute Loss with respect to target
+        targets = torch.sum(labels,dim=1)
+        logits = torch.cat(logits_store)
         loss = lossfun(logits, labels)
-        _, predicted = torch.max(logits, 1)
+        # _, predicted = torch.max(logits, 1)
+        pred_sig = torch.sigmoid(logits).detach()
+        predicted = pred_sig.sum(dim=1).round()
+        
         #Metric Calculation
         # total_dice+=MetricFun(outputs, labels)
-        metrics_calc = metricfun(predicted,labels.type(torch.int16))
+        metrics_calc = metricfun(predicted.type(torch.int16),targets.type(torch.int16))
         # back propagate
         loss.backward()
         # do SGD step i.e., update parameters
         optimizer.step()
         # by default loss is averaged over all elements of batch
         running_loss += loss.data
-        predicted_labels.extend(predicted.detach().cpu())
-        true_labels.extend(labels.cpu())
+        predicted_labels.extend(predicted.cpu())
+        true_labels.extend(targets.cpu())
     running_loss = running_loss.cpu().numpy()
     metrics_calc = metricfun.compute()
     # print(metrics_calc)
     metricfun.reset()
     f1score = metrics_calc["train_F1Score"].cpu().numpy().item()
     accuracy = metrics_calc["train_Accuracy"].cpu().numpy()
-    qwk = quadratic_kappa_coefficient(torch.tensor(predicted_labels),torch.tensor(true_labels))
+    qwk = quadratic_kappa_coefficient(torch.tensor(predicted_labels).type(torch.int64),torch.tensor(true_labels).type(torch.int64))
     if verbosity:
         print("train accuracy: {}, train f1 score: {}, train QWK: {}".format(accuracy,f1score,qwk))
     return running_loss
@@ -82,24 +92,30 @@ def val_one_epoch(model,testloader,lossfun,metricfun,DEVICE,verbosity=False):
             for i in range(len(labels)):
                 logits = model(x[i].to(DEVICE))
                 logits_store.append(logits)
+            targets = torch.sum(labels,dim=1)
             logits = torch.cat(logits_store)
             loss = lossfun(logits, labels)
-            _, predicted = torch.max(logits, 1)
+            # _, predicted = torch.max(logits, 1)
+            pred_sig = torch.sigmoid(logits)
+            predicted = pred_sig.sum(dim=1).round()
             #Metric Calculation
             # total_dice+=MetricFun(outputs, labels)
-            metrics_calc = metricfun(predicted,labels.type(torch.int16))
+            metrics_calc = metricfun(predicted.type(torch.int16),targets.type(torch.int16))
             running_loss += loss.data
             image_ids.extend(data["id"])
-            true_labels.extend(data["label"].numpy())
-            pred_probs.extend(torch.nn.functional.softmax(logits.cpu(),dim=1).numpy())
-            predicted_labels.extend(predicted.cpu())
+            # true_labels.extend(data["label"].numpy())
+            true_labels.extend(targets.cpu().numpy())
+            # pred_probs.extend(torch.nn.functional.softmax(logits.cpu(),dim=1).numpy())
+            pred_probs.append(pred_sig.cpu().numpy())
+            predicted_labels.extend(predicted.cpu().numpy())
+    pred_probs = np.concatenate(pred_probs)
     metrics_calc = metricfun.compute()
     # print(metrics_calc)
     running_loss = running_loss.cpu().numpy()
     metricfun.reset()
     f1score = metrics_calc["test_F1Score"].cpu().numpy().item()
     test_accuracy = metrics_calc["test_Accuracy"].cpu().numpy()
-    qwk = quadratic_kappa_coefficient(torch.tensor(predicted_labels),torch.tensor(true_labels))
+    qwk = quadratic_kappa_coefficient(torch.tensor(predicted_labels).type(torch.int64),torch.tensor(true_labels).type(torch.int64))
     if verbosity:
         print("val accuracy: {}, val f1 score: {}, val qwk score: {}".format(test_accuracy,f1score,qwk))
     return qwk,running_loss/len(testloader),pred_probs,true_labels,image_ids
@@ -112,11 +128,15 @@ def train_full(datasets, model, args, verbosity=False, save_model=False, model_n
     valloader = torch.utils.data.DataLoader(val_dataset,batch_size=args.batch_size,shuffle=True,collate_fn=collate)
     DEVICE = torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(DEVICE)
-    lossfunc = nn.CrossEntropyLoss().to(DEVICE)
+    # lossfunc = nn.CrossEntropyLoss().to(DEVICE)
+    lossfunc = nn.BCEWithLogitsLoss().to(DEVICE)
     #optimizer
-    optimizer = optim.Adam(model.parameters(),lr=args.lr, weight_decay = args.lamda)
+    # optimizer = optim.Adam(model.parameters(),lr=args.lr, weight_decay = args.lamda)
+    optimizer = optim.Adam(model.parameters(),lr=args.lr/WARMUP_FACTOR, weight_decay = args.lamda)
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,'min',patience=args.patience)
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer,milestones=[20, 60],gamma=0.1)
+    # scheduler = optim.lr_scheduler.MultiStepLR(optimizer,milestones=[20, 60],gamma=0.1)
+    scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs-WARMUP_EGO)
+    scheduler = GradualWarmupScheduler(optimizer, multiplier=WARMUP_FACTOR, total_epoch=WARMUP_EGO, after_scheduler=scheduler_cosine)
     #Metrics
     metricfunc = torchmetrics.MetricCollection([torchmetrics.Accuracy(num_classes=args.num_classes,average=None),
                                             torchmetrics.F1Score(num_classes=args.num_classes,average='weighted'),
@@ -125,10 +145,11 @@ def train_full(datasets, model, args, verbosity=False, save_model=False, model_n
     trainmetricdict = metricfunc.clone(prefix='train_').to(DEVICE)
     testmetricdict = metricfunc.clone(prefix='test_').to(DEVICE)
     best_metric = 0
-    for epoch in range(args.num_epochs):
+    for epoch in range(1,args.num_epochs+1):
         train_one_epoch(model, trainloader ,optimizer, lossfunc, trainmetricdict, DEVICE, verbosity)
         test_metric,test_loss,pred_probs,true_labels,image_ids = val_one_epoch(model,valloader,lossfunc,testmetricdict,DEVICE,verbosity)
-        scheduler.step(test_loss)
+        # scheduler.step(test_loss)
+        scheduler.step(epoch-1)
         if save_model:
             if test_metric>=best_metric:
                 best_metric = test_metric
@@ -140,7 +161,7 @@ def collate(batch):
     image = [ b['image'] for b in batch ] # w, h
     label = [ b['label'] for b in batch ]
     id = [ b['id'] for b in batch ]
-    return {'image': image, 'label': torch.tensor(label), 'id': np.array(id)}
+    return {'image': image, 'label': torch.cat(label), 'id': np.array(id)}
 
 def preprocess_data(args):
     ######## data preprocessing
@@ -246,28 +267,27 @@ if __name__=="__main__":
     parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
 
     parser.add_argument('--num_classes',type=int, default=6)
-    parser.add_argument('--lr',type=float,default=1e-3)
+    parser.add_argument('--lr',type=float,default=1e-4)
     parser.add_argument('--lamda', type=float, default=0.0005, help="weight decay to use in adam optimizer")
     parser.add_argument('--patience', type=int, default=10, help="number of epochs to wait in reducelronplateu lr scheduler")
-    parser.add_argument('--num_epochs', type=int, default=100)
+    parser.add_argument('--num_epochs', type=int, default=30)
     parser.add_argument('--batch_size', type=int, default=32)
 
     args = parser.parse_args()
 
     #model defination
-    model = TransMIL_peg(n_classes=6)
+    model = TransMIL_peg(n_classes=args.num_classes-1)
     (X_train_clean,y_train_clean),(X_val_clean,y_val_clean),(X_test_clean,y_test_clean), id_reference = preprocess_data(args)
 
     X_train_clean["isup_grade"] = y_train_clean
     train_split = X_train_clean.reset_index(drop=True)
     X_val_clean["isup_grade"] = y_val_clean
     val_split = X_val_clean.reset_index(drop=True)
-    # train_split = pd.concat((X_train_clean,X_val_clean)).reset_index(drop=True)
+    train_split = pd.concat((X_train_clean,X_val_clean)).reset_index(drop=True)
     X_test_clean["isup_grade"] = y_test_clean
     test_split = X_test_clean.reset_index(drop=True)
 
     trainset = Pandas_Dataset(train_split,args.data_root_dir)
     # valset = Pandas_Dataset(val_split,args.data_root_dir)
     testset = Pandas_Dataset(test_split,args.data_root_dir)
-
-    train_full((trainset,testset),model,args)
+    train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"multiclass_pred_{time.strftime('_%d%b_%H_%M_%S', time.localtime())}")
