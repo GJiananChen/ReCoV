@@ -15,6 +15,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import random
 import h5py
+import pickle
 
 import torch
 import numpy as np
@@ -396,7 +397,6 @@ if __name__ == '__main__':
     pred_proba = rf.predict_proba(X_test)
     acc = accuracy_score(y_test, y_pred)
     print(f'ACC={acc * 100:.3f}%')
-    import pickle
 
-    with open(str(file_loc / f"results/memory_cifar_{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v3.npy"), "wb") as file:
-        np.save(file, memory, allow_pickle=True)
+    # with open(str(file_loc / f"results/memory_cifar_{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v3.npy"), "wb") as file:
+        # np.save(file, memory, allow_pickle=True)

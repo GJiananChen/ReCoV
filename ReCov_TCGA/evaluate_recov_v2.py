@@ -8,7 +8,8 @@ import math
 import sys
 from timeit import default_timer as timer
 from pathlib import Path
-ROOT_PATH = str(Path(__file__).resolve().parent.parent/"Patch-GCN")
+# ROOT_PATH = str(Path(__file__).resolve().parent.parent/"Patch-GCN")
+ROOT_PATH = "/home/ramanav/Projects/TCGA_MIL/Patch-GCN"
 sys.path.append(ROOT_PATH)
 
 import numpy as np
@@ -135,7 +136,7 @@ def main(args, exclusion):
     print(results_latest_df)
     print(u"Test performance: {} \u00B1 {}".format(np.mean(results_latest_df["val_cindex"].values),np.std(results_latest_df["val_cindex"].values)))
 
-EXCLUSION = True
+# EXCLUSION = True
 # EXCLUSION = False
 ### Training settings
 parser = argparse.ArgumentParser(description='Configurations for Survival Analysis on TCGA Data.')
@@ -154,20 +155,27 @@ parser.add_argument('--log_data',        action='store_true', default=False, hel
 parser.add_argument('--overwrite',       action='store_true', default=True, help='Whether or not to overwrite experiments (if already ran)')
 parser.add_argument('--testing',         action='store_true', default=False, help='debugging tool')
 parser.add_argument('--censor_time',      type=float, default=150.0, help='Censoring patients beyond certain time period')
+parser.add_argument('--auxillary_training', action='store_true', default=False, help='If want to load for pretrained model')
+parser.add_argument('--augmentation', action='store_true', default=False, help='If you want to perform online augmentations')
 
 ### Model Parameters.
-parser.add_argument('--model_type',      type=str, choices=['deepset', 'amil', 'mifcn', 'dgc', 'patchgcn'], default='tmil', help='Type of model (Default: mcat)')
+parser.add_argument('--model_type',      type=str, choices=['deepset', 'amil', 'mifcn', 'dgc', 'patchgcn', 'tmil', 'gtn', 'tmil_orig','hvtsurv'], default='amil', help='Type of model (Default: mcat)')
 parser.add_argument('--mode',            type=str, choices=['path', 'cluster', 'graph'], default='path', help='Specifies which modalities to use / collate function in dataloader.')
-parser.add_argument('--num_gcn_layers',  type=int, default=4, help = '# of GCN layers to use.')
+parser.add_argument('--num_gcn_layers',  type=int, default=2, help = '# of GCN layers to use.')
+parser.add_argument('--nystrom_heads',  type=int, default=1, help = '# of nystrom heads to use.')
+parser.add_argument('--nystrom_landmarks',  type=int, default=128, help = '# of nystrom landmarks to use.')
 parser.add_argument('--edge_agg',        type=str, default='spatial', help="What edge relationship to use for aggregation.")
 parser.add_argument('--resample',        type=float, default=0.00, help='Dropping out random patches.')
 parser.add_argument('--drop_out',        action='store_true', default=True, help='Enable dropout (p=0.25)')
+parser.add_argument('--hidden_dim',        type=int, default=128, help = '# features for hidden layers')
+parser.add_argument('--add_pe',        action='store_true', default=False, help='Enable postional encoding')
+parser.add_argument('--add_edge_attr',        action='store_true', default=False, help='Enable edge attribute')
 
 ### Optimizer Parameters + Survival Loss Function
 parser.add_argument('--opt',             type=str, choices = ['adam', 'sgd'], default='adam')
 parser.add_argument('--batch_size',      type=int, default=1, help='Batch Size (Default: 1, due to varying bag sizes)')
 parser.add_argument('--gc',              type=int, default=32, help='Gradient Accumulation Step.')
-parser.add_argument('--max_epochs',      type=int, default=30, help='Maximum number of epochs to train (default: 20)')
+parser.add_argument('--max_epochs',      type=int, default=20, help='Maximum number of epochs to train (default: 20)')
 parser.add_argument('--lr',              type=float, default=2e-4, help='Learning rate (default: 0.0001)')
 parser.add_argument('--bag_loss',        type=str, choices=['svm', 'ce', 'ce_surv', 'nll_surv', 'cox_surv'], default='nll_surv', help='slide-level classification loss function (default: ce)')
 parser.add_argument('--label_frac',      type=float, default=1.0, help='fraction of training labels (default: 1.0)')
@@ -178,10 +186,11 @@ parser.add_argument('--reg_type',        type=str, choices=['None', 'omic', 'pat
 parser.add_argument('--lambda_reg',      type=float, default=1e-4, help='L1-Regularization Strength (Default 1e-4)')
 parser.add_argument('--weighted_sample', action='store_true', default=True, help='Enable weighted sampling')
 parser.add_argument('--early_stopping',  action='store_true', default=False, help='Enable early stopping')
+parser.add_argument('--exclusion',action='store_true',default=False)
 
 args = parser.parse_args()
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+EXCLUSION = args.exclusion
 ### Creates Experiment Code from argparse + Folder Name to Save Results
 args = get_custom_exp_code(args)
 args.task = '_'.join(args.split_dir.split('_')[:2]) + '_survival'
@@ -219,7 +228,15 @@ settings = {'num_splits': args.k,
             'model_type': args.model_type,
             'weighted_sample': args.weighted_sample,
             'gc': args.gc,
-            'opt': args.opt}
+            'opt': args.opt,
+            'num_gcn_layers': args.num_gcn_layers, 
+            'nystrom_heads': args.nystrom_heads,  
+            'nystrom_landmarks': args.nystrom_landmarks,
+            'hidden_dim': args.hidden_dim,
+            'add_pe': args.add_pe,
+            'add_edge_attr': args.add_edge_attr,
+            'augmentation': args.augmentation,
+            } 
 print('\nLoad Dataset')
 
 if 'survival' in args.task:
@@ -228,7 +245,7 @@ if 'survival' in args.task:
     if study == 'tcga_kirc' or study == 'tcga_kirp':
         combined_study = 'tcga_kidney'
     elif study == 'tcga_luad' or study == 'tcga_lusc':
-        combined_study = 'tcga_lung'
+        combined_study = 'tcga_luad'
     else:
         combined_study = study
     study_dir = '%s_10x_features' % combined_study
@@ -242,7 +259,7 @@ if 'survival' in args.task:
                                            patient_strat= False,
                                            n_bins=4,
                                            label_col = 'survival_months',
-                                           ignore=[],)
+                                           ignore=[])
                                         #    censor_time=args.censor_time)
 else:
     raise NotImplementedError
@@ -296,7 +313,9 @@ settings.update({'split_dir': args.split_dir})
 # MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_08Oct_00_52/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
 # MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_08Oct_00_54/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
 # MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_16Oct_17_53_02/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
-MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_16Oct_18_04_48/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
+# MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_16Oct_18_04_48/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
+MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/AMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_AMIL_nll_surv_a0.0_5foldcv_gc32_s1_15Jan_19_22_20/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
+# MEMORY_PATH = "/localdisk3/ramanav/Results/TCGA_Results/Recov/5foldcv/TransMIL_nll_surv_a0.0_5foldcv_gc32/tcga_brca_TransMIL_nll_surv_a0.0_5foldcv_gc32_s1_15Jan_19_22_43/tcgabrca_recov_results/memory_TCGA_cindex_1auc_0.5_0_nosplit.npy"
 
 settings.update({'memory_path':MEMORY_PATH})
 with open(args.results_dir + '/experiment_{}.txt'.format(args.exp_code), 'w') as f:

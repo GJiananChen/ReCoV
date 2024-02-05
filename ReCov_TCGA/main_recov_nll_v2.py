@@ -8,7 +8,8 @@ import math
 import sys
 from timeit import default_timer as timer
 from pathlib import Path
-ROOT_PATH = str(Path(__file__).resolve().parent.parent/"Patch-GCN")
+# ROOT_PATH = str(Path(__file__).resolve().parent.parent/"Patch-GCN")
+ROOT_PATH = "/home/ramanav/Projects/TCGA_MIL/Patch-GCN"
 sys.path.append(ROOT_PATH)
 
 import seaborn as sns
@@ -241,14 +242,22 @@ parser.add_argument('--log_data',        action='store_true', default=True, help
 parser.add_argument('--overwrite',       action='store_true', default=False, help='Whether or not to overwrite experiments (if already ran)')
 parser.add_argument('--testing',         action='store_true', default=False, help='debugging tool')
 parser.add_argument('--censor_time',      type=float, default=150.0, help='Censoring patients beyond certain time period')
+parser.add_argument('--auxillary_training', action='store_true', default=False, help='If want to load for pretrained model')
+parser.add_argument('--augmentation', action='store_true', default=False, help='If you want to perform online augmentations')
+
 
 ### Model Parameters.
-parser.add_argument('--model_type',      type=str, choices=['deepset', 'amil', 'mifcn', 'dgc', 'patchgcn','tmil'], default='tmil', help='Type of model (Default: mcat)')
+parser.add_argument('--model_type',      type=str, choices=['deepset', 'amil', 'mifcn', 'dgc', 'patchgcn', 'tmil', 'gtn', 'tmil_orig','hvtsurv'], default='amil', help='Type of model (Default: mcat)')
 parser.add_argument('--mode',            type=str, choices=['path', 'cluster', 'graph'], default='path', help='Specifies which modalities to use / collate function in dataloader.')
-parser.add_argument('--num_gcn_layers',  type=int, default=4, help = '# of GCN layers to use.')
+parser.add_argument('--num_gcn_layers',  type=int, default=2, help = '# of GCN layers to use.')
+parser.add_argument('--nystrom_heads',  type=int, default=1, help = '# of nystrom heads to use.')
+parser.add_argument('--nystrom_landmarks',  type=int, default=128, help = '# of nystrom landmarks to use.')
 parser.add_argument('--edge_agg',        type=str, default='spatial', help="What edge relationship to use for aggregation.")
 parser.add_argument('--resample',        type=float, default=0.00, help='Dropping out random patches.')
 parser.add_argument('--drop_out',        action='store_true', default=True, help='Enable dropout (p=0.25)')
+parser.add_argument('--hidden_dim',        type=int, default=128, help = '# features for hidden layers')
+parser.add_argument('--add_pe',        action='store_true', default=False, help='Enable postional encoding')
+parser.add_argument('--add_edge_attr',        action='store_true', default=False, help='Enable edge attribute')
 
 ### Optimizer Parameters + Survival Loss Function
 parser.add_argument('--opt',             type=str, choices = ['adam', 'sgd'], default='adam')
@@ -296,7 +305,15 @@ settings = {'num_splits': args.k,
             'model_type': args.model_type,
             'weighted_sample': args.weighted_sample,
             'gc': args.gc,
-            'opt': args.opt}
+            'opt': args.opt,
+            'num_gcn_layers': args.num_gcn_layers, 
+            'nystrom_heads': args.nystrom_heads,  
+            'nystrom_landmarks': args.nystrom_landmarks,
+            'hidden_dim': args.hidden_dim,
+            'add_pe': args.add_pe,
+            'add_edge_attr': args.add_edge_attr,
+            'augmentation': args.augmentation,
+            } 
 print('\nLoad Dataset')
 
 if 'survival' in args.task:
@@ -305,7 +322,7 @@ if 'survival' in args.task:
     if study == 'tcga_kirc' or study == 'tcga_kirp':
         combined_study = 'tcga_kidney'
     elif study == 'tcga_luad' or study == 'tcga_lusc':
-        combined_study = 'tcga_lung'
+        combined_study = 'tcga_luad'
     else:
         combined_study = study
     study_dir = '%s_10x_features' % combined_study
@@ -345,8 +362,10 @@ if ('summary_latest.csv' in os.listdir(args.results_dir)) and (not args.overwrit
 args.split_dir = os.path.join(ROOT_PATH,'splits', args.which_splits, args.split_dir)
 print("split_dir", args.split_dir)
 assert os.path.isdir(args.split_dir)
+settings.update({'data_root_dir':args.data_root_dir})
 settings.update({'split_dir': args.split_dir})
 settings.update({'experiment details':"Testing with cindex metric and auc metric"})
+settings.update({'results_dir': args.results_dir})
 
 with open(args.results_dir + '/experiment_{}.txt'.format(args.exp_code), 'w') as f:
     print(settings, file=f)
@@ -393,7 +412,9 @@ if __name__ == "__main__":
     for seed in range(args.seed,args.seed+N_RUNS):
         latest_val_cindex, patient_ids, risk_all, bag_fu_all, bag_labels, hazards_all, labels_all = train_one_run(args, seed, fold_splits, identified, train_cases_list)
         memory = rank_weights(latest_val_cindex,patient_ids, risk_all, bag_fu_all, bag_labels, hazards_all, labels_all, memory)
-        fold_splits, fold_ids = sample_folds(args.k,memory,TAU)
+        # fold_splits, fold_ids = sample_folds(args.k,memory,TAU)
+        kfold = StratifiedKFold(n_splits=args.k, shuffle=True, random_state=seed+1)
+        fold_splits = list(kfold.split(train_cases_list, train_outcomes))
         #Get K worst samples
         temp = np.argsort(memory)[:TOP_K]
         identified = [train_cases_list[ids] for ids in temp]

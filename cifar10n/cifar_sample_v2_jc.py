@@ -151,24 +151,32 @@ consistency_matrix = []
 if __name__ == '__main__':
     N_RUNS = 20
     N_FOLDS = 5
-    TAU = 0.6
+    TAU = 0.5
     NOISE_TYPE = 'aggre' # ['clean', 'random1', 'random2', 'random3', 'aggre', 'worst']
     RANDOM_STATE = 1
     SUBSET_LENGTH = 50000
-    # MEMORY_NOISE_THRES = 0.05
-    TOP_K = 3000
+    MEMORY_NOISE_THRES = 0.08
+    # TOP_K = 3000
     #Dropping bottom 5% of the dataset
-    NOISY_DROP = 0.4
-
+    NOISY_DROP = 0.5
+    FEAT = "dinov2"
 
     if not (file_loc / "results/cifar").is_dir():
         os.mkdir(file_loc / "results/cifar")
 
     random.seed(RANDOM_STATE)
     np.random.seed(RANDOM_STATE)
-    cifar10n_pt = str(file_loc / 'data/CIFAR-N/CIFAR-10_human.pt')
-    # cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats.h5')
-    cifar_h5 = str(file_loc / 'data/CIFAR-N/cifar_feats_resnet18.h5')
+    cifar10n_pt = str('/localdisk3/ramanav/CIFAR-N/CIFAR-10_human.pt')
+
+    if FEAT == 'dinov2':
+        cifar_h5 = str('/localdisk3/ramanav/CIFAR-N/cifar_feats.h5')
+    elif FEAT == 'imagenet':
+        cifar_h5 = str('/localdisk3/ramanav/CIFAR-N/cifar_feats_imagenet.h5')
+    elif FEAT == 'resnet':
+        cifar_h5 = str('/localdisk3/ramanav/CIFAR-N/cifar_feats_resnet18.h5')
+    else:
+        print('Feature type not suppported.')
+
 
 
     noise_file = torch.load(cifar10n_pt)
@@ -229,8 +237,8 @@ if __name__ == '__main__':
         fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
         # Get K worst samples for dropping from training
         # noise_set = np.argsort(memory)[:TOP_K]
-        identified = np.argsort(memory)[:TOP_K]
-        # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+        # identified = np.argsort(memory)[:TOP_K]
+        identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
         print(f"Number of noise labels identified: {len(identified)}")
         # Evaluate
         F = set(identified)
@@ -247,8 +255,8 @@ if __name__ == '__main__':
 
     print(identified)
 
-    # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
-    identified = np.argsort(memory)[:TOP_K]
+    identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
+    # identified = np.argsort(memory)[:TOP_K]
     # identified = np.argsort(memory)[:4505]
 
     F = set(identified)
@@ -363,5 +371,5 @@ if __name__ == '__main__':
     print(f'ACC={acc * 100:.3f}%')
     import pickle
 
-    with open(str(file_loc / f"results/cifar/memory_cifarn_resnet_{NOISE_TYPE}_{TAU}_v2.npy"), "wb") as file:
-        np.save(file, memory)
+    # with open(str(file_loc / f"results/cifar/memory_cifarn_resnet_{NOISE_TYPE}_{TAU}_v2.npy"), "wb") as file:
+    #     np.save(file, memory)

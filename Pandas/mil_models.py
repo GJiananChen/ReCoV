@@ -64,17 +64,20 @@ Code copied from https://github.com/szc19990412/HVTSurv/blob/main/models/TransMI
 '''
 # It's challenging for TransMIL to process all the high-dimensional data in the patient-level bag, so we reduce the dimension from 1024 to 128.
 class TransMIL_peg(nn.Module):
-    def __init__(self, n_classes):
+    def __init__(self, n_classes,dim=512):
         super(TransMIL_peg, self).__init__()
-        self.pos_layer = PEG(128)
-        self._fc1 = nn.Sequential(nn.Linear(768, 128), nn.ReLU())
-        self.cls_token = nn.Parameter(torch.randn(1, 1, 128))
+        self.pos_layer = PEG(dim)
+        self._fc1 = nn.Sequential(nn.Linear(768, dim), nn.ReLU())
+        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
         self.n_classes = n_classes
-        self.layer1 = TransLayer(dim=128)
-        self.layer2 = TransLayer(dim=128)
-        self.norm = nn.LayerNorm(128)
-        # self._fc2 = nn.Linear(128, self.n_classes)
-        self._fc2 = nn.Sequential(*[nn.Linear(128,128), nn.LayerNorm(128), nn.ReLU(), nn.Linear(128, n_classes)])
+        self.layer1 = TransLayer(dim=dim)
+        self.layer2 = TransLayer(dim=dim)
+        self.norm = nn.LayerNorm(dim)
+        # self._fc2 = nn.Linear(dim, self.n_classes)
+        # self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.LayerNorm(dim), nn.ReLU(), nn.Linear(dim, n_classes)])
+        # self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.ReLU(), nn.Linear(dim, n_classes)])
+        self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.ReLU(), nn.Dropout(0.25), nn.Linear(dim, n_classes)])
+
 
     def forward(self, x, return_attn=False):
 

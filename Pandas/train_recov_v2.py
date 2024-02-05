@@ -68,7 +68,7 @@ def rank_weights(test_metrics, test_ids, pred_probs, test_labels, memory, lamda 
     weights = lamda[0]*weights_qwk + lamda[1]*weights_auc
     # weights = lamda[0]*weights_likelihood + lamda[1]*weights_margin + lamda[2]*weights_auc + lamda[3]*weights_qwk
     weights = weights[np.argsort(test_ids_all)]
-    memory = 0.5*weights + 0.5*memory
+    memory = 0.3*weights + 0.7*memory
     return memory
 
 def plot_weights(x,noise_labels):
@@ -97,7 +97,7 @@ def train_one_run(fold_splits, fulltraindataset, args, filter_noise, noisy_idx=[
     for fold, (train_ids, test_ids) in enumerate(fold_splits):
         #model defination
         # model = TransMIL_peg(n_classes=6)
-        model = TransMIL_peg(n_classes=args.num_classes-1)
+        model = TransMIL_peg(n_classes=args.num_classes-1, dim=512)
         if filter_noise and len(noisy_idx)>0 and (args.noisy_drop>0):
             #select 80% indice to drop randomly
             drop_idx = np.random.permutation(noisy_idx)[:int(args.noisy_drop*len(noisy_idx))]
@@ -118,7 +118,8 @@ def train_one_run(fold_splits, fulltraindataset, args, filter_noise, noisy_idx=[
 parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
 #system settings
 parser.add_argument('--seed',type=int,default=1)
-parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
+# parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
+parser.add_argument('--data_root_dir', type=str, default='/aippmdata/public/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
 parser.add_argument('--csv_path', type=str, default='/aippmdata/public/PANDAS')
 parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
 #model settings
@@ -127,11 +128,14 @@ parser.add_argument('--lr',type=float,default=1e-4)
 parser.add_argument('--lamda', type=float, default=0.0005, help="weight decay to use in adam optimizer")
 parser.add_argument('--patience', type=int, default=10, help="number of epochs to wait in reducelronplateu lr scheduler")
 parser.add_argument('--num_epochs', type=int, default=15)
-parser.add_argument('--batch_size', type=int, default=64)
+# parser.add_argument('--num_epochs', type=int, default=30)
+# parser.add_argument('--batch_size', type=int, default=64)
+parser.add_argument('--batch_size', type=int, default=60)
 #recov settings
 parser.add_argument('--recov_runs',type=int, default=20,help="number of recov runs")
+# parser.add_argument('--recov_runs',type=int, default=1,help="number of recov runs")
 parser.add_argument('--n_folds',type=int,default=5)
-parser.add_argument('--tau',type=float,default=2.5,help="temperature value for softmax for probabilistic sampling in recov")
+parser.add_argument('--tau',type=float,default=1.0,help="temperature value for softmax for probabilistic sampling in recov")
 parser.add_argument('--noisy_drop',type=float,default=0.5,help="percentage of dropping random idx from the bottom memory indices")
 parser.add_argument('--filter_noise',action='store_true',default=False,help="for dropping noisy labels randomly from the bottom memory indices")
 args = parser.parse_args()
@@ -149,7 +153,10 @@ TOP_K = 500
 # LAMDA = [0,0,0,1]
 LAMDA = [1,0]
 # EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}"
-EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}_changemem"
+# EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}_changemem"
+# EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}_origsoln"
+# EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{LAMDA}_{1*FILTER_NOISE}_biggermodel"
+EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{TAU}_{LAMDA}_{1*FILTER_NOISE}_origfoldsplit"
 (X_train_clean,y_train_clean),(X_val_clean,y_val_clean),(X_test_clean,y_test_clean), _ = preprocess_data(args)
 
 X_train_clean["isup_grade"] = y_train_clean
@@ -177,12 +184,12 @@ for run in range(N_RUNS):
     # rank the ids
     memory = rank_weights(test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds, memory,lamda=LAMDA)
     # Generate new set of folds based on weights
-    # fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
-    kfold = StratifiedKFold(n_splits=args.n_folds, shuffle=True, random_state=args.seed + run + 1)
-    fold_splits = list(kfold.split(train_split["int_id"].values, train_split["isup_grade"].values))
+    fold_splits, fold_ids = sample_folds(N_FOLDS, memory, TAU)
+    # kfold = StratifiedKFold(n_splits=args.n_folds, shuffle=True, random_state=args.seed + run + 1)
+    # fold_splits = list(kfold.split(train_split["int_id"].values, train_split["isup_grade"].values))
     # Get K worst samples for dropping from training
     # noise_set = np.argsort(memory)[:TOP_K]
     identified = np.argsort(memory)[:TOP_K]
     plot_weights(memory, (train_split["data_provider"]=="radboud"))
-    with open(str(file_loc/f"results/pandas/memory_{EXP_NAME}_v2.npy"),"wb") as file:
+    with open(str(file_loc/f"results/pandas/memory_{EXP_NAME}_{run+1}_v2.npy"),"wb") as file:
         np.save(file,memory)

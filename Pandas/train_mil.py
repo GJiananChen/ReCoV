@@ -153,7 +153,7 @@ def train_full(datasets, model, args, verbosity=False, save_model=False, model_n
         if save_model:
             if test_metric>=best_metric:
                 best_metric = test_metric
-                torch.save(model,Path(args.save_dir)/f"{model_name}.pt")
+                torch.save(model.state_dict(),Path(args.save_dir)/f"{model_name}.pt")
     # print("Training done...")
     return test_metric,pred_probs,true_labels,image_ids 
 
@@ -262,7 +262,8 @@ if __name__=="__main__":
     #hyperparameters settings
     parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
     parser.add_argument('--seed',type=int,default=1)
-    parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
+    # parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
+    parser.add_argument('--data_root_dir', type=str, default='/aippmdata/public/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
     parser.add_argument('--csv_path', type=str, default='/aippmdata/public/PANDAS')
     parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
 
@@ -271,12 +272,12 @@ if __name__=="__main__":
     parser.add_argument('--lamda', type=float, default=0.0005, help="weight decay to use in adam optimizer")
     parser.add_argument('--patience', type=int, default=10, help="number of epochs to wait in reducelronplateu lr scheduler")
     parser.add_argument('--num_epochs', type=int, default=30)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=64)
 
     args = parser.parse_args()
 
     #model defination
-    model = TransMIL_peg(n_classes=args.num_classes-1)
+    model = TransMIL_peg(n_classes=args.num_classes-1,dim=512)
     (X_train_clean,y_train_clean),(X_val_clean,y_val_clean),(X_test_clean,y_test_clean), id_reference = preprocess_data(args)
 
     X_train_clean["isup_grade"] = y_train_clean
@@ -290,4 +291,4 @@ if __name__=="__main__":
     trainset = Pandas_Dataset(train_split,args.data_root_dir)
     # valset = Pandas_Dataset(val_split,args.data_root_dir)
     testset = Pandas_Dataset(test_split,args.data_root_dir)
-    train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"multiclass_pred_{time.strftime('_%d%b_%H_%M_%S', time.localtime())}")
+    train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"kagglepipeline_512_drpout_{time.strftime('_%d%b_%H_%M_%S', time.localtime())}")
