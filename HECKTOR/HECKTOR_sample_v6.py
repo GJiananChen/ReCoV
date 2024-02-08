@@ -231,7 +231,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, uncertainity_all, memory)
     #Save memory
-    with open("../results/memory_auc_cindex_corr_9.npy","wb") as file:
+    with open("../results/memory_auc_cindex_corr_9_onerun.npy","wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
@@ -249,7 +249,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(jianan_indices,memory[jianan_indices])
     plt.legend(["other","jianan"])
-    plt.savefig("../results/hecktor_weights_cindex_corr_v9.png")
+    plt.savefig("../results/hecktor_weights_cindex_corr_v9_onerun.png")
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 

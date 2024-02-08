@@ -43,6 +43,8 @@ def get_parser():
                         help='number of folds for cross validation')
     parser.add_argument('--n_runs', default=50, type=int,
                         help='number of runs for repeated validation')
+    # parser.add_argument('--n_runs', default=1, type=int,
+                        # help='number of runs for repeated validation')
     parser.add_argument('--censor',
                         default=730,
                         type=int, help='threshold for right censoring')

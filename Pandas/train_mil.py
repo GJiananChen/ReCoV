@@ -176,7 +176,7 @@ def preprocess_data(args):
     #Clean based on slides containing atleast >10 patches
     clean_idx = []
     data_store = []
-    for i in range(len(clean_df)):
+    for i in tqdm(range(len(clean_df))):
         paths = clean_df.iloc[i]["image_id"]
         data = torch.load(Path(args.data_root_dir)/f"{paths}_featvec.pt",map_location="cpu")
         if len(data)<10:

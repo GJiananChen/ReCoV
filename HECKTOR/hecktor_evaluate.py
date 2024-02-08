@@ -1,6 +1,7 @@
 from __future__ import print_function
 import random
 
+import time 
 import numpy as np
 import pandas as pd
 import os
@@ -191,11 +192,16 @@ if __name__ == '__main__':
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1.5auc_0.4_1.npy","rb") as file:
     # with open("/home/ramanav/Projects/ReCoV/results/HECKTOR/memory_cindex_1auc_0.5_1_corr.npy","rb") as file:
     # with open("/home/ramanav/Projects/ReCoV/results/memory_auc_cindex_corr_8.npy","rb") as file:
-    # with open("/home/ramanav/Projects/ReCoV/results/memory_auc_cindex_corr_9.npy","rb") as file:
-        # memory = np.load(file)
-    # exclusion = list(np.argsort(memory)[:20])
-    # print(exclusion)
-    exclusion = []
+    # with open("/home/vramanathan/Projects/ReCoV/results/memory_auc_cindex_corr_9.npy","rb") as file:
+    with open("/home/vramanathan/Projects/ReCoV/results/memory_auc_cindex_corr_9_onerun.npy","rb") as file:
+        memory = np.load(file)
+    exclusion = list(np.argsort(memory)[:20])
+    #random exclusion
+    # np.random.seed(int(time.time()))
+    # exclusion = list(np.random.permutation(len(memory))[:20])
+    #no exclusion
+    # exclusion = []
+    print(exclusion)
 
     for seeds in range(5):
         random_seed = args.seed + seeds

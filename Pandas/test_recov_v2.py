@@ -10,6 +10,7 @@
 # --------------------------------------------------------------------------------------------------------------------------
 #
 
+import random
 import time
 import argparse
 import pandas as pd
@@ -30,7 +31,7 @@ parser.add_argument('--seed',type=int,default=1)
 # parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
 parser.add_argument('--data_root_dir', type=str, default='/aippmdata/public/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
 parser.add_argument('--csv_path', type=str, default='/aippmdata/public/PANDAS')
-parser.add_argument('--save_dir',type=str, default='/home/ramanav/Projects/ReCoV/results/pandas')
+parser.add_argument('--save_dir',type=str, default='/home/vramanathan/Projects/ReCoV/results/pandas')
 # parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
 
 #model settings
@@ -49,10 +50,10 @@ parser.add_argument('--n_folds',type=int,default=5)
 # parser.add_argument('--model_name',type=str,default="07Jan_16_56_02_1_s1_[1, 0]_0_origsoln")
 # parser.add_argument('--model_name',type=str,default="12Jan_14_58_46_20_s1_[1, 0]_1_changemem")
 # parser.add_argument('--model_name',type=str,default="17Jan_09_22_35_20_s1_[1, 0]_1_origfoldsplit")
-parser.add_argument('--model_name',type=str,default="01Feb_13_28_48_20_s1_0.1_[1, 0]_1_origfoldsplit")
-# parser.add_argument('--model_name',type=str,default="01Feb_13_28_48_20_s1_0.5_[1, 0]_1_origfoldsplit")
+# parser.add_argument('--model_name',type=str,default="01Feb_13_28_48_20_s1_0.1_[1, 0]_1_origfoldsplit")
+parser.add_argument('--model_name',type=str,default="01Feb_13_28_48_20_s1_0.5_[1, 0]_1_origfoldsplit")
 
-parser.add_argument('--exclusion',action='store_true',default=False)
+parser.add_argument('--exclusion',action='store_true',default=True)
 args = parser.parse_args()
 print(args)
 
@@ -61,7 +62,7 @@ ROOT_PATH = Path(args.save_dir)
 EXCLUSION = args.exclusion
 DEVICE = torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu")
 timestamp = time.strftime("%d%b_%H_%M_%S", time.gmtime())
-EPCOH_NUM = 20
+EPCOH_NUM = 15
 
 #model defination
 # model = TransMIL_peg(n_classes=args.num_classes-1)
@@ -108,8 +109,16 @@ if EXCLUSION:
     print(split.loc[split["memory"]<=THRESHOLD]["data_provider"].value_counts())
     print(split.loc[split["memory"]<=THRESHOLD]["isup_grade"].value_counts())
     index_list = split.loc[split["memory"]>THRESHOLD,"image_id"].tolist()
+    #random exclusion
+    np.random.seed(int(time.time()))
+    index_list = list(np.random.permutation(split["image_id"].tolist())[:len(index_list)])
+    temp = split["image_id"].tolist()
+    random.shuffle(temp)
+    index_list = temp[:len(index_list)]
+    
     train_split = train_split.loc[train_split["image_id"].isin(index_list)].reset_index(drop=True)
     print(f"Excluded: {orig_length-len(train_split)}")
+    print(index_list)
     # val_split = val_split.loc[val_split["image_id"].isin(index_list)].reset_index(drop=True)
 
 trainset = Pandas_Dataset(train_split,args.data_root_dir)
@@ -119,7 +128,8 @@ testset = Pandas_Dataset(test_split,args.data_root_dir)
 # _,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_{MODEL_NAME}_{EXCLUSION*1}")
 # _,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_{MODEL_NAME}_{EXCLUSION*1}_officialsoln")
 # _,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_{MODEL_NAME}_{EXCLUSION*1}_officialsoln_recov")
-_,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_{MODEL_NAME}_{EPCOH_NUM}_{EXCLUSION*1}_bigger_recov_origmemsplit")
+# _,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_{MODEL_NAME}_{EPCOH_NUM}_{EXCLUSION*1}_bigger_recov_origmemsplit")
+_,_,_,_  = train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"{timestamp}_randomexclusion")
 
 # model = torch.load(Path(args.save_dir)/f"{timestamp}_{MODEL_NAME}.pt")
 # # model = torch.load(Path(args.save_dir)/f"{'_22Dec_15_33_13'}_{MODEL_NAME}.pt")
