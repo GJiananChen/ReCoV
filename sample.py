@@ -61,7 +61,14 @@ def sample_folds(n_folds:int, weights:np.array, tau:float) -> Tuple[List,Dict]:
     #Assuming 'best' is the best fold and 'worst' is the worst fold and 'rest' are in between folds
     fold_id = {"best":[],"rest":[],"worst":[]}
     p_i = get_sample_probs(weights,tau)
-    ordering = np.random.choice(n_samples,size=n_samples,replace=False,p=p_i)
+    if tau<0.0001:
+        #tau = 0 case, deterministic
+        ordering = np.argsort(weights)[::-1]
+    elif tau>10000:
+        #infinite tau case
+        ordering = np.random.permutation(len(weights))
+    else:
+        ordering = np.random.choice(n_samples,size=n_samples,replace=False,p=p_i)
     fold_id["best"] = ordering[:int(n_samples/n_folds)]
     fold_id["rest"] = ordering[int(n_samples/n_folds):(n_folds-1)*int(n_samples/n_folds)]
     fold_id["worst"] = ordering[(n_folds-1)*int(n_samples/n_folds):]

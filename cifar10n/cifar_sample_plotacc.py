@@ -163,7 +163,6 @@ if __name__ == '__main__':
     MEMORY_NOISE_THRES = 0.3
     #Dropping bottom 5% of the dataset
     NOISY_DROP = 0.8
-    TOP_K = 5000
 
     if not (file_loc / "results/cifar").is_dir():
         os.mkdir(file_loc / "results/cifar")
@@ -232,7 +231,7 @@ if __name__ == '__main__':
 
     for run in range(N_RUNS):
         # train for one run
-        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=identified)
+        aucs, test_ids, pred_probs, test_labels = train_one_run(fold_splits,filter_noise=True,noisy_idx=np.where(memory<=MEMORY_NOISE_THRES)[0])
         print(f"Iteration {run}: {aucs}")
         # rank the ids
         memory = rank_weights(aucs, test_ids, pred_probs, test_labels, memory)
@@ -241,7 +240,7 @@ if __name__ == '__main__':
         # Get K worst samples for dropping from training
         # noise_set = np.argsort(memory)[:TOP_K]
         # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
-        identified = np.argsort(memory)[:TOP_K]
+        identified = np.argsort(memory)[:4505]
         print(f"Number of noise labels identified: {len(identified)}")
         # Evaluate
         F = set(identified)
@@ -262,7 +261,7 @@ if __name__ == '__main__':
     with open(str(file_loc / f"results/cifar/f1score_{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}.npy"),"wb") as file:
         np.save(file,f1score)
     # identified = np.where(memory<=MEMORY_NOISE_THRES)[0]
-    identified = np.argsort(memory)[:TOP_K]
+    identified = np.argsort(memory)[:4505]
 
     # F = set(identified)
     # G = set(range(0, len(y))) - set(gt)
