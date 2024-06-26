@@ -13,7 +13,7 @@ An overview of the methodology and its results are shown below
 
 <img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/recov.png" align="center" width="880" ><figcaption>Fig.1 - Pseudocode for ReCoV</figcaption></a>
 
-<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/inkfilter.png" align="center" width="880" ><figcaption>Fig.2 - Pseudocode for FastReCoV</figcaption></a> 
+<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/fastrecov.png" align="center" width="880" ><figcaption>Fig.2 - Pseudocode for FastReCoV</figcaption></a> 
 
 ## Getting Started
 
@@ -51,7 +51,7 @@ Before running the model, the feautres are to be extracted using ```python featu
 ## Results
 For more results, please refer to our paper  
 
-<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/result1.png" align="center" width="880" ><figcaption>Fig.3 - Results for CIFAR10N dataset</figcaption></a>
+<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/cifar10n_results.png" align="center" width="880" ><figcaption>Fig.3 - Results for CIFAR10N dataset</figcaption></a>
 
 ## Contact
 If you want to contact, you can reach the authors by raising an issue or
