@@ -1,29 +1,19 @@
-# Detecting noisy labels with Repeated CrOss-Validations - ReCOV
+# Detecting noisy labels with Repeated Cross-Validations - ReCOV
 Code and data for the manuscript: **Detecting noisy labels with repeated cross-validations**
-
-## Datasets
-Mushroom dataset: https://www.kaggle.com/datasets/uciml/mushroom-classification
-TCIA-HN1: https://wiki.cancerimagingarchive.net/display/Public/Head-Neck-Radiomics-HN1
-HECKTOR 2022: https://hecktor.grand-challenge.org/
-
-## Drive link to extracted CIFAR10 features
-https://drive.google.com/file/d/1hxEmGA4IFUK6mH554ZFw4FymW4Pcw_L1/view?usp=sharing
 
 ## Description
 
-This project is about identifying and removing ink markings from histopathology whole slides for aiding downstream computational analysis. The algorithm requires no annotation or manual curation of data and requires only clean slides, making it easy to adapt and deploy in new set of histopathology slides.
+This project is about label noise detection problem from any dataset, especially targeting medical datasets. Two algorithms namely ReCoV and its faster alternative, fastReCoV are proposed, based on the idea that fluctuations in cross validation performance are caused by label noise. The algorithms achieve state of the art label noise detection performance in a wide range of modalities, models and tasks. 
 
 ## Methodology
-The methodlogy consists of two networks:-
-1. Ink filter: A binary classifier with Resnet 18 backbone
-2. Ink corrector: Pix2pix module for removing ink from a patch by image to image translation 
+The methodlogy consists of two algorithms:-
+1. ReCoV
+2. FastReCoV
 An overview of the methodology and its results are shown below
 
-<img src="https://github.com/Vishwesh4/Ink-WSI/blob/master/images/methodology_overview.png" align="center" width="880" ><figcaption>Fig.1 - Methodology overview</figcaption></a>
+<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/recov.png" align="center" width="880" ><figcaption>Fig.1 - Pseudocode for ReCoV</figcaption></a>
 
-<img src="https://github.com/Vishwesh4/Ink-WSI/blob/master/images/inkfilter.png" align="center" width="880" ><figcaption>Fig.2 - Ink filter output</figcaption></a> 
-
-<img src="https://github.com/Vishwesh4/Ink-WSI/blob/master/images/pix2pix_results.png" align="center" width="880" ><figcaption>Fig.3 - Pix2pix output</figcaption></a> 
+<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/inkfilter.png" align="center" width="880" ><figcaption>Fig.2 - Pseudocode for FastReCoV</figcaption></a> 
 
 ## Getting Started
 
@@ -40,49 +30,29 @@ scikit-image
 warmup-scheduler
 nystrom-attention
 ```
-### Modules
+### Datasets
 
-The project has 6 modules:-  
-1. Ink filter module - `./train_filter`
-2. Ink removal module (Pix2pix) - `./ink_removal`
-3. Patch Extraction - `./modules/patch_extraction`
-4. Image Metric Calculate - `./modules/metrics`
-5. Registration - `./modules/register`
-6. Deployment of methodology over new slides - `./deploy`
+The project is applied to 4 datasets:-  
+1. Mushroom (`./mushroom`) - https://www.kaggle.com/datasets/uciml/mushroom-classification
+2. Hecktor (`./HECKTOR`) - https://hecktor.grand-challenge.org/
+3. CIFAR-10N (`./cifar10n`) - http://noisylabels.com/
+4. PANDAS (`./Pandas`) - https://www.kaggle.com/competitions/prostate-cancer-grade-assessment
 
-#### Ink Filter module
-1. The model can be trained by modifying `config.yml` file, specifying the location of path of clean slides to be used, and set of colors to be used
-2. The training can be done by using
-```
-python train.py -c [CONFIG FILE LOCATION]
-```
-#### Ink Removal module
-1. The code has been taken from the original repository [link](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
-2. For training with your own dataset, please follow a similar code structure to `./ink_removal/data/dcisink_dataset.py` or `./ink_removal/data/tiger_dataset.py`. Mixture of the two datasets was used for the given model `./ink_removal/data/mixed_dataset.py`
-3. The model can be trained by using
-```
-./train_pix2pix.sh
-```
-4. The model can be tested by using
-```
-./test_pix2pix.sh
-```
-For testing, corresponding ink and clean slides should be available
-5. The image metrics can be calculated by using
-```
-./run_calc_metrics.sh
-```
-The test model name has to be specified
 
-#### Deploy module
-1. The modules can be deployed using the class `Ink_deploy`. An example is shown in `./deploy/process.py`. It also has a script `./deploy/construct_wsi.py` for running algorithm over a whole slide image, however it expects sedeen annotation.
-```python
-ink_deploy = Ink_deploy(filter_path:str=INK_PATH,
-                        output_dir:str=None, 
-                        pix2pix_path:str=PIX2PIX_PATH, 
-                        device=torch.device("cpu"))
-```
-### 
+### Preparing dataset and Running ReCoV
+#### Mushroom dataset
+The dataset can be downloaded from the given link. The two algorithms can be run directly using ```python mushroom_[recov/fastrecov].py```
+#### CIFAR10N dataset
+Before running the model on the dataset, for the individual images, features are to be extracted. This can be done via ```python cifar_featextract.py```. After this step, fastRecov can be run using ```python cifar_fastrecov.py```
+#### HECKTOR dataset
+Before running the model, the radiomics features are extracted using .... After this step, both recov and fastrecov can be run using ```python HECKTOR_[recov/fastrecov].py```. The identified labels can be evaluated using ```python hecktor_evaluate.py```
+#### PANDAS dataset
+Before running the model, the feautres are to be extracted using ```python featureextraction.py```. After this step, fastRecov can be run using ```python pandas_fastrecov.py```. Since the test set is hosted in kaggle, users can save the fastrecov noise cleaned model using ```python test_fastrecov.py```, and evalute on kaggle using ```pandas-recov-submission.ipynb``` notebook.
+## Results
+For more results, please refer to our paper  
+
+<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/result1.png" align="center" width="880" ><figcaption>Fig.3 - Results for CIFAR10N dataset</figcaption></a>
+
 ## Contact
 If you want to contact, you can reach the authors by raising an issue or
  email at vishweshramanathan@mail.utoronto.ca/chenjn2010@gmail.com
@@ -90,4 +60,3 @@ If you want to contact, you can reach the authors by raising an issue or
 ## Cite
 ```
 ```
-
