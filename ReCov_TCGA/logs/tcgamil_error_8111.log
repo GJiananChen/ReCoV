@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "main_recov_nll.py", line 367, in <module>
-    memory = rank_weights(latest_val_cindex,patient_ids, risk_all, bag_fu_all, bag_labels, hazards_all, labels_all, memory)
-  File "main_recov_nll.py", line 135, in rank_weights
-    weights_like = nll_metric_all.copy()
-AttributeError: 'Tensor' object has no attribute 'copy'

@@ -73,9 +73,6 @@ class TransMIL_peg(nn.Module):
         self.layer1 = TransLayer(dim=dim)
         self.layer2 = TransLayer(dim=dim)
         self.norm = nn.LayerNorm(dim)
-        # self._fc2 = nn.Linear(dim, self.n_classes)
-        # self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.LayerNorm(dim), nn.ReLU(), nn.Linear(dim, n_classes)])
-        # self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.ReLU(), nn.Linear(dim, n_classes)])
         self._fc2 = nn.Sequential(*[nn.Linear(dim,dim), nn.ReLU(), nn.Dropout(0.25), nn.Linear(dim, n_classes)])
 
 

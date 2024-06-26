@@ -137,7 +137,6 @@ class MINN(nn.Module):
         return neg_log_likelihood, A
 
 # current best model
-# tried batchnorm but it's normalizing instances instead of batches
 class MIL_reg_Ins(nn.Module):
     def __init__(self, pooling='mean', n_input=128, activation='ReLU', apply_dropout=False, p = 0.3):
         super(MIL_reg_Ins, self).__init__()
@@ -217,11 +216,7 @@ class MIL_reg_Ins(nn.Module):
                 Y = torch.sigmoid(Y)  # softmax over N
                 Y = torch.mul(Y, n)
                 Y = torch.mm(Y, H)  # KxL
-        # H_B = torch.sum(H, 0)
-        # Y_hat = torch.ge(Y_prob, 0.5).float()
         A = 0
-        # print(Y)
-        # print(Y_ins)
         return Y, Y_ins, A
 
     # AUXILIARY METHODS
@@ -299,11 +294,7 @@ class MIL_reg_Ins_cli(nn.Module):
                 Y = torch.sigmoid(Y)  # softmax over N
                 Y = torch.mul(Y, n)
                 Y = torch.mm(Y, H)  # KxL
-        # H_B = torch.sum(H, 0)
-        # Y_hat = torch.ge(Y_prob, 0.5).float()
         A = 0
-        # print(Y)
-        # print(Y_ins)
         return Y, Y_ins, A
 
     # AUXILIARY METHODS

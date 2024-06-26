@@ -33,9 +33,6 @@ class AMINNDataset:
             self.data_csv = str(file_loc / 'data/Lung_multi.csv')
             self.cli_csv = str(file_loc / 'data/Lung_clinical.csv')
         elif self.data == 'hecktor':
-            # self.data_csv = './data/HECKTOR_multi_2.csv'
-            # self.data_csv = './data/HECKTOR_multi.csv'
-            # self.data_csv = './data/HECKTOR_train_all_setting2.csv'
             self.data_csv = str(file_loc / 'data/HECKTOR_train_all_setting2.csv')
             self.cli_csv = str(file_loc / 'data/hecktor2022_endpoint_training.csv')
         elif self.data == 'hecktor_train':

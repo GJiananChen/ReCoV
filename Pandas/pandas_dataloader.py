@@ -1,14 +1,6 @@
-#
-# --------------------------------------------------------------------------------------------------------------------------
-# Created on Fri dec 8 2023 at University of Toronto
-#
-# Author: Vishwesh Ramanathan
-# Email: vishwesh.ramanathan@mail.utoronto.ca
-# Description: This script is about creating dataset for pandas recov 
-# Modifications (date, what was modified):
-#   1.
-# --------------------------------------------------------------------------------------------------------------------------
-#
+"""
+Script is about creating dataset for performing MIL type training for PANDAS
+"""
 
 from pathlib import Path
 import torch
@@ -25,15 +17,7 @@ class Pandas_Dataset(Dataset):
         self.data_dir = Path(data_dir)
         self.data_df = data_df
         self.n_classes = self.data_df["isup_grade"].max() + 1
-        # self.data_list = data_list
-        # self.data_set = []
-        # for i in range(len(self.data_df)):
-        #     int_id = self.data_df.iloc[i]["int_id"]
-        #     paths = self.data_df.iloc[i]["image_id"]
-        #     data = torch.load(self.data_dir/f"{paths}_featvec.pt",map_location="cpu")
-        #     label = self.data_df.iloc[i]["isup_grade"]
-        #     self.data_set.append({"id":int_id,"paths":paths,"data":data,"label":label})
-        # self.data_set = pd.DataFrame(self.data_set)
+
     def __len__(self):
         return len(self.data_df)
 

@@ -1,14 +1,6 @@
-#
-# --------------------------------------------------------------------------------------------------------------------------
-# Created on Fri Dec 08 2023 at University of Toronto
-#
-# Author: Vishwesh Ramanathan
-# Email: vishwesh.ramanathan@mail.utoronto.ca
-# Description: This script is about training functions for MIL classification
-# Modifications (date, what was modified):
-#   1.
-# --------------------------------------------------------------------------------------------------------------------------
-#
+"""
+Script for training MIL model
+"""
 
 from pathlib import Path
 import time
@@ -128,13 +120,9 @@ def train_full(datasets, model, args, verbosity=False, save_model=False, model_n
     valloader = torch.utils.data.DataLoader(val_dataset,batch_size=args.batch_size,shuffle=True,collate_fn=collate)
     DEVICE = torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(DEVICE)
-    # lossfunc = nn.CrossEntropyLoss().to(DEVICE)
     lossfunc = nn.BCEWithLogitsLoss().to(DEVICE)
     #optimizer
-    # optimizer = optim.Adam(model.parameters(),lr=args.lr, weight_decay = args.lamda)
     optimizer = optim.Adam(model.parameters(),lr=args.lr/WARMUP_FACTOR, weight_decay = args.lamda)
-    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer,'min',patience=args.patience)
-    # scheduler = optim.lr_scheduler.MultiStepLR(optimizer,milestones=[20, 60],gamma=0.1)
     scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.num_epochs-WARMUP_EGO)
     scheduler = GradualWarmupScheduler(optimizer, multiplier=WARMUP_FACTOR, total_epoch=WARMUP_EGO, after_scheduler=scheduler_cosine)
     #Metrics
@@ -262,10 +250,9 @@ if __name__=="__main__":
     #hyperparameters settings
     parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
     parser.add_argument('--seed',type=int,default=1)
-    # parser.add_argument('--data_root_dir', type=str, default='/localdisk3/ramanav/TCGA_processed/PANDAS_MIL_Patches_Ctrans_1MPP/', help='data directory')
-    parser.add_argument('--data_root_dir', type=str, default='/aippmdata/public/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
-    parser.add_argument('--csv_path', type=str, default='/aippmdata/public/PANDAS')
-    parser.add_argument('--save_dir',type=str, default='/localdisk3/ramanav/Results/ReCoV/results/PANDAS')
+    parser.add_argument('--data_root_dir', type=str, default='../data/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
+    parser.add_argument('--csv_path', type=str, default='../data/PANDAS')
+    parser.add_argument('--save_dir',type=str, default='../results/PANDAS')
 
     parser.add_argument('--num_classes',type=int, default=6)
     parser.add_argument('--lr',type=float,default=1e-4)
@@ -289,6 +276,5 @@ if __name__=="__main__":
     test_split = X_test_clean.reset_index(drop=True)
 
     trainset = Pandas_Dataset(train_split,args.data_root_dir)
-    # valset = Pandas_Dataset(val_split,args.data_root_dir)
     testset = Pandas_Dataset(test_split,args.data_root_dir)
     train_full((trainset,testset),model,args,verbosity=True,save_model=True,model_name=f"kagglepipeline_512_drpout_{time.strftime('_%d%b_%H_%M_%S', time.localtime())}")
