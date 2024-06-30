@@ -100,8 +100,8 @@ def featextraction(tiles):
         print("Extracted {} features".format(len(all_feats)))
     return all_feats
 
-DATA = '../data/PANDAS/train_images'
-TEST = '../data//PANDAS/train.csv'
+DATA = '../data/PANDA/train_images'
+TEST = '../data//PANDA/train.csv'
 sz = 224
 nworkers = 4
 DEVICE = torch.device("cuda:0")
@@ -109,7 +109,7 @@ model_fv = model.to(DEVICE)
 #Choose MPP between 1 or 0.5
 MPP = 1
 # MPP = 0.5
-OUTPUT_DIR = Path(f'./data/PANDAS/PANDAS_MIL_Patches_Selfpipeline_{MPP}MPP')
+OUTPUT_DIR = Path(f'./data/PANDA/PANDA_MIL_Patches_Selfpipeline_{MPP}MPP')
 Path.mkdir(OUTPUT_DIR,parents=True,exist_ok=True)
 processed_files = [files.stem for files in OUTPUT_DIR.glob("*.pt")]
 

@@ -245,10 +245,10 @@ def quadratic_kappa_coefficient(output, target):
 if __name__=="__main__":
     import argparse
     from mil_models import TransMIL_peg
-    from pandas_dataloader import Pandas_Dataset
+    from panda_dataloader import Pandas_Dataset
 
     #hyperparameters settings
-    parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
+    parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in PANDA dataset')
     parser.add_argument('--seed',type=int,default=1)
     parser.add_argument('--data_root_dir', type=str, default='../data/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
     parser.add_argument('--csv_path', type=str, default='../data/PANDAS')

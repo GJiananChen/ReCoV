@@ -1,5 +1,5 @@
 """
-Script is about creating dataset for performing MIL type training for PANDAS
+Script is about creating dataset for performing MIL type training for PANDA
 """
 
 from pathlib import Path

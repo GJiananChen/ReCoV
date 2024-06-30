@@ -10,16 +10,16 @@ import torch
 import torchmetrics
 
 from mil_models import TransMIL_peg
-from pandas_dataloader import Pandas_Dataset
+from panda_dataloader import Pandas_Dataset
 from train_mil import preprocess_data,train_full
 
 #hyperparameters settings
-parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
+parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in PANDA dataset')
 #system settings
 parser.add_argument('--seed',type=int,default=1)
-parser.add_argument('--data_root_dir', type=str, default='../data/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
-parser.add_argument('--csv_path', type=str, default='../data/PANDAS')
-parser.add_argument('--save_dir',type=str, default='../results/PANDAS')
+parser.add_argument('--data_root_dir', type=str, default='../data/PANDA/PANDA_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
+parser.add_argument('--csv_path', type=str, default='../data/PANDA')
+parser.add_argument('--save_dir',type=str, default='../results/PANDA')
 
 #model settings
 parser.add_argument('--num_classes',type=int, default=6)

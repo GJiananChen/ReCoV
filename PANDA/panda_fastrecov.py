@@ -18,7 +18,7 @@ from sklearn.model_selection import StratifiedKFold
 from utils.sample import sample_folds
 from train_mil import train_full, preprocess_data
 from mil_models import TransMIL_peg
-from pandas_dataloader import Pandas_Dataset
+from panda_dataloader import Pandas_Dataset
 
 file_loc = Path(__file__).resolve().parent.parent
 
@@ -63,7 +63,7 @@ def plot_weights(x,noise_labels):
     plt.scatter(data_idx[np.where(labels==0)[0]],x_clean,s=1)
     plt.scatter(data_idx[np.where(labels==1)[0]],x_noise,s=1)
     plt.legend(["karolinska","radboud"])
-    plt.savefig(str(file_loc / f"results/pandas/pandas_{EXP_NAME}.png"))
+    plt.savefig(str(file_loc / f"results/panda/panda_{EXP_NAME}.png"))
 
 def train_one_run(fold_splits, fulltraindataset, args, filter_noise, noisy_idx=[]):
     test_metric_folds = []
@@ -91,12 +91,12 @@ def train_one_run(fold_splits, fulltraindataset, args, filter_noise, noisy_idx=[
     return test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds
 
 #hyperparameters settings
-parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in Pandas dataset')
+parser = argparse.ArgumentParser(description='Configurations for Gleason Grading in PANDA dataset')
 #system settings
 parser.add_argument('--seed',type=int,default=1)
-parser.add_argument('--data_root_dir', type=str, default='../data/PANDAS/PANDAS_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
-parser.add_argument('--csv_path', type=str, default='../data/PANDAS')
-parser.add_argument('--save_dir',type=str, default='../results/PANDAS')
+parser.add_argument('--data_root_dir', type=str, default='../data/PANDA/PANDA_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
+parser.add_argument('--csv_path', type=str, default='../data/PANDA')
+parser.add_argument('--save_dir',type=str, default='../results/PANDA')
 #model settings
 parser.add_argument('--num_classes',type=int, default=6)
 parser.add_argument('--lr',type=float,default=1e-4)
@@ -136,7 +136,7 @@ train_split = train_split.sort_values(by="image_id").reset_index(drop=True)
 train_split["int_id"] = train_split.index
 test_split = X_test_clean.reset_index(drop=True)
 save_splits = train_split.drop(columns=["data"])
-save_splits.to_csv(str(file_loc/f"results/pandas/splitsave_{EXP_NAME}.csv"),index=False)
+save_splits.to_csv(str(file_loc/f"results/panda/splitsave_{EXP_NAME}.csv"),index=False)
 
 kfold = StratifiedKFold(n_splits=args.n_folds, shuffle=True, random_state=args.seed)
 fold_splits = list(kfold.split(train_split["int_id"].values, train_split["isup_grade"].values))
@@ -155,7 +155,7 @@ for run in range(N_RUNS):
     # Get K worst samples for dropping from training
     identified = np.argsort(memory)[:TOP_K]
     plot_weights(memory, (train_split["data_provider"]=="radboud"))
-    with open(str(file_loc/f"results/pandas/memory_{EXP_NAME}_{run+1}_v2.npy"),"wb") as file:
+    with open(str(file_loc/f"results/panda/memory_{EXP_NAME}_{run+1}_v2.npy"),"wb") as file:
         np.save(file,memory)
 
 end_time = time.time()

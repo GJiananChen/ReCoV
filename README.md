@@ -1,19 +1,32 @@
-# Detecting noisy labels with Repeated Cross-Validations - ReCOV
+# Detecting noisy labels with Repeated Cross-Validations - ReCoV
 Code and data for the manuscript: **Detecting noisy labels with repeated cross-validations**
 
 ## Description
 
-This project is about label noise detection problem from any dataset, especially targeting medical datasets. Two algorithms namely ReCoV and its faster alternative, fastReCoV are proposed, based on the idea that fluctuations in cross validation performance are caused by label noise. The algorithms achieve state of the art label noise detection performance in a wide range of modalities, models and tasks. 
+This repository contains the code and data of the paper "Detecting noisy labels with repeated
+cross-validations", which is accepted at MICCAI 2024 for publication.
+
+In this work we propose a novel label noise detection algorithm for identifying cases with noisy labels within a given dataset.
+We found that noisy cases consistently lead to worse performance in cross-validation across different folds in n-fold cross validations. By pinpointing the examples that more frequently contribute to inferior cross-validation results, our methods, ReCoV and fastReCoV, effectively identifies the noisy examples within the dataset.
+ 
+
+
+## Key Features
+- State-of-the-Art Performance: fastReCoV outperforms existing methods for noisy label detection in popular comptuer vision and medical imaging datasets
+- Plug-and-play for most supervised learning tasks and network structures, with potential applications beyond computer vision. 
+- Does not require prior knowledge of the percentage of noisy examples.
+- Efficient when using embeddings (extracted with pre-trained models) as inputs
+
 
 ## Methodology
 The methodlogy consists of two algorithms:-
-1. ReCoV
-2. FastReCoV
+1. ReCoV, the original algorithm that is grounded in mathematical foundations. Recommended for tabular datasets. 
+2. FastReCoV, a computationally efficient variant that offers a slightly reduced performance but are significantly faster. Recommended for deep learning tasks with large datasets.
 An overview of the methodology and its results are shown below
 
-<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/recov.png" align="center" width="880" ><figcaption>Fig.1 - Pseudocode for ReCoV</figcaption></a>
+<img src="https://github.com/GJiananChen/ReCoV/blob/master/images/recov.JPG" align="center" width="880" ><figcaption>Fig.1 - Pseudocode for ReCoV</figcaption></a>
 
-<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/fastrecov.png" align="center" width="880" ><figcaption>Fig.2 - Pseudocode for FastReCoV</figcaption></a> 
+<img src="https://github.com/GJiananChen/ReCoV/blob/master/images/fastrecov.JPG" align="center" width="880" ><figcaption>Fig.2 - Pseudocode for FastReCoV</figcaption></a> 
 
 ## Getting Started
 
@@ -36,27 +49,41 @@ The project is applied to 4 datasets:-
 1. Mushroom (`./mushroom`) - https://www.kaggle.com/datasets/uciml/mushroom-classification
 2. Hecktor (`./HECKTOR`) - https://hecktor.grand-challenge.org/
 3. CIFAR-10N (`./cifar10n`) - http://noisylabels.com/
-4. PANDAS (`./Pandas`) - https://www.kaggle.com/competitions/prostate-cancer-grade-assessment
+4. PANDA (`./PANDA`) - https://www.kaggle.com/competitions/prostate-cancer-grade-assessment
 
 
-### Preparing dataset and Running ReCoV
+### Reproducing our results
+
 #### Mushroom dataset
 The dataset can be downloaded from the given link. The two algorithms can be run directly using ```python mushroom_[recov/fastrecov].py```
 #### CIFAR10N dataset
 Before running the model on the dataset, for the individual images, features are to be extracted. This can be done via ```python cifar_featextract.py```. After this step, fastRecov can be run using ```python cifar_fastrecov.py```
 #### HECKTOR dataset
-Before running the model, the radiomics features are extracted using .... After this step, both recov and fastrecov can be run using ```python HECKTOR_[recov/fastrecov].py```. The identified labels can be evaluated using ```python hecktor_evaluate.py```
-#### PANDAS dataset
-Before running the model, the feautres are to be extracted using ```python featureextraction.py```. After this step, fastRecov can be run using ```python pandas_fastrecov.py```. Since the test set is hosted in kaggle, users can save the fastrecov noise cleaned model using ```python test_fastrecov.py```, and evalute on kaggle using ```pandas-recov-submission.ipynb``` notebook.
+Before running the model, the radiomics features are extracted using ```python HECKTOR_extraction.py``` After this step, both recov and fastrecov can be run using ```python HECKTOR_[recov/fastrecov].py```. The identified labels can be evaluated using ```python hecktor_evaluate.py```
+#### PANDA dataset
+Before running the model, the feautres are to be extracted using ```python featureextraction.py```. After this step, fastRecov can be run using ```python panda_fastrecov.py```. Since the test set is hosted in kaggle, users can save the fastrecov noise cleaned model using ```python test_fastrecov.py```, and evalute on kaggle using ```panda-recov-submission.ipynb``` notebook.
 ## Results
-For more results, please refer to our paper  
 
-<img src="https://github.com/GJiananChen/ReCoV/blob/sample/images/cifar10n_results.png" align="center" width="880" ><figcaption>Fig.3 - Results for CIFAR10N dataset</figcaption></a>
+<img src="https://github.com/GJiananChen/ReCoV/blob/master/images/cifar10n_results.png" align="center" width="880" ><figcaption>Fig.3 - Results for CIFAR10N dataset</figcaption></a>
+For more results, please refer to our paper.
+More results to be added after the camera ready submission.
+
+### Applying ReCoV to your dataset
+To apply ReCoV to your dataset, you can follow the steps below:-
+1. Prepare your dataset by converting them into a tabular dataset (-omics) or extracting features from your cases with a pre-trained model e.g. .
+2. Run the fastReCoV algorithm by following the pseudo code or example scripts.
 
 ## Contact
-If you want to contact, you can reach the authors by raising an issue or
- email at vishweshramanathan@mail.utoronto.ca/chenjn2010@gmail.com
+You can reach the authors by raising an issue in this repo or
+ email them at chenjn2010@gmail.com/vishweshramanathan@mail.utoronto.ca/a.martel@utoronto.ca
 
 ## Cite
 ```
+@article{chen2023cross,
+  title={Cross-Validation Is All You Need: A Statistical Approach To Label Noise Estimation},
+  author={Chen, Jianan and Martel, Anne},
+  journal={arXiv preprint arXiv:2306.13990},
+  year={2023}
+}
 ```
+To be updated with new citations after camera ready submission and publication.
