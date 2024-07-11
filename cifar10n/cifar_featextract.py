@@ -31,10 +31,10 @@ img_trans = transforms.Compose([
 ])
 
 #Load dataset
-trainset = datasets.CIFAR10(root='./data', train=True, download=True, transform=img_trans)
+trainset = datasets.CIFAR10(root='../data', train=True, download=True, transform=img_trans)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
 
-testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=img_trans)
+testset = datasets.CIFAR10(root='../data', train=False, download=True, transform=img_trans)
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
 
 #Extract features and labels for training

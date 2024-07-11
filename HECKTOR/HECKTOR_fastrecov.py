@@ -113,7 +113,8 @@ FILTER_DROP = True
 # FILTER_DROP = False
 NOISY_DROP = 0.1
 LAMDA = 0
-EXP_NAME = f"auc_cindex_corr_{NOISY_DROP*FILTER_DROP}_{TAU}_50_1_{LAMDA}_timetest"
+EXP_NAME = f"auc_cindex_corr_{NOISY_DROP*FILTER_DROP}_{TAU}_50_1_{LAMDA}"
+Path.mkdir(Path("../results/hecktor"), parents=True, exist_ok=True)
 print(EXP_NAME)
 
 args = get_parser()
@@ -201,7 +202,7 @@ for seed in range(args.seed,args.seed+args.n_runs):
 
     memory = rank_weights(aucs_last,test_ids_weight, risk_all, bag_fu_all, bag_labels, memory)
     #Save memory
-    with open(f"../results/memory_{EXP_NAME}.npy","wb") as file:
+    with open(f"../results/hecktor/memory_{EXP_NAME}.npy","wb") as file:
         np.save(file,memory)
     #Generate new set of folds based on weights
     fold_splits, fold_ids = sample_folds(args.folds,memory,TAU)
@@ -218,8 +219,8 @@ for seed in range(args.seed,args.seed+args.n_runs):
     plt.scatter(other_indicies,memory[other_indicies])
     plt.scatter(identified,memory[identified])
     plt.legend(["other","fastrecov_identified_indices"])
-    plt.savefig(f"../results/hecktor_{EXP_NAME}.png")
+    plt.savefig(f"../results/hecktor/hecktor_{EXP_NAME}.png")
 
     wandb.log({"last_aucs_average": np.mean(aucs_last)})
 end_time = time()
-print(end_time - start_time)
+print("Total time taken: {}".format(end_time - start_time))

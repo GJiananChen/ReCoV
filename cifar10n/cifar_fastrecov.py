@@ -95,7 +95,7 @@ if __name__ == '__main__':
     NOISY_DROP = 0.8
     EXP_NAME = f"{NOISE_TYPE}_{TAU}_{FEAT}_{N_RUNS}_v5"
 
-    Path.mkdir(file_loc / "results/cifar",exist_ok=True)
+    Path.mkdir(file_loc / "results/cifar",exist_ok=True,parents=True)
 
     random.seed(RANDOM_STATE)
     np.random.seed(RANDOM_STATE)

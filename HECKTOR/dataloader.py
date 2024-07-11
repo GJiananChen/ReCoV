@@ -8,9 +8,8 @@ import numpy as np
 import torch
 import torch.utils.data as data_utils
 from torchvision import datasets, transforms
-from utils import create_lung_df, create_hn_df, create_liver_df, feature_sets_lung, feature_sets_hn, feature_sets_liver
 import pandas as pd
-
+from sklearn.model_selection import StratifiedKFold
 
 class AMINNDataset:
     def __init__(self, data='liver', censor=0, subset='multi',exclusion=[]):
@@ -175,6 +174,7 @@ class AMINNDataset:
 
 
 def generate_dataset(data_csv, cli_csv, data='lung', subset = 'multi_largest', censor=1095, normalize=True):
+    from utils import create_lung_df, create_hn_df, create_liver_df, feature_sets_lung, feature_sets_hn, feature_sets_liver
     if data == 'liver':
         df = create_liver_df(data_csv, cli_csv,censor=censor, subset=subset)
         features, labels = feature_sets_liver(df, normalize=normalize)

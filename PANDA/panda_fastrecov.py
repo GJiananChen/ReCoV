@@ -96,7 +96,6 @@ parser = argparse.ArgumentParser(description='Configurations for Gleason Grading
 parser.add_argument('--seed',type=int,default=1)
 parser.add_argument('--data_root_dir', type=str, default='../data/PANDA/PANDA_MIL_Patches_Selfpipeline_1MPP/', help='data directory')
 parser.add_argument('--csv_path', type=str, default='../data/PANDA')
-parser.add_argument('--save_dir',type=str, default='../results/PANDA')
 #model settings
 parser.add_argument('--num_classes',type=int, default=6)
 parser.add_argument('--lr',type=float,default=1e-4)
@@ -123,6 +122,7 @@ FILTER_NOISE = args.filter_noise
 TOP_K = 500
 LAMDA = [1,0]
 EXP_NAME = f"{time.strftime('_%d%b_%H_%M_%S', time.localtime())}_{N_RUNS}_s{RANDOM_STATE}_{TAU}_{LAMDA}_{NOISY_DROP*FILTER_NOISE}_origfoldsplit_timetest"
+Path.mkdir(Path("../results/panda"),parents=True,exist_ok=True)
 (X_train_clean,y_train_clean),(X_val_clean,y_val_clean),(X_test_clean,y_test_clean), _ = preprocess_data(args)
 
 X_train_clean["isup_grade"] = y_train_clean
@@ -146,8 +146,8 @@ identified = []
 
 start_time = time.time()
 for run in range(N_RUNS):
-    test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds = train_one_run(fold_splits,train_split,args,filter_noise=FILTER_NOISE,noisy_idx=identified)
     print(f"Iteration {run}: {test_metric_folds}")
+    test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds = train_one_run(fold_splits,train_split,args,filter_noise=FILTER_NOISE,noisy_idx=identified)
     # rank the ids
     memory = rank_weights(test_metric_folds, image_ids_folds, pred_probs_folds, true_labels_folds, memory,lamda=LAMDA)
     # Generate new set of folds based on weights
