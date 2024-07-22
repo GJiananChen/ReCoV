@@ -6,8 +6,8 @@ Code and data for the manuscript: **Detecting noisy labels with repeated cross-v
 This repository contains the code and data of the paper "Detecting noisy labels with repeated
 cross-validations", which is accepted at MICCAI 2024 for publication.
 
-In this work we propose a novel label noise detection algorithm for identifying cases with noisy labels within a given dataset.
-We found that noisy cases consistently lead to worse performance in cross-validation across different folds in n-fold cross validations. By pinpointing the examples that more frequently contribute to inferior cross-validation results, our methods, ReCoV and fastReCoV, effectively identifies the noisy examples within the dataset.
+In this work we propose a novel algorithm for identifying cases with noisy labels within a given dataset.
+We found that noisy cases consistently lead to worse performance for the validation fold in n-fold cross validations. By pinpointing the examples that more frequently contribute to inferior cross-validation results, our methods, ReCoV and fastReCoV, effectively identifies the noisy samples within the dataset.
  
 
 
@@ -20,7 +20,7 @@ We found that noisy cases consistently lead to worse performance in cross-valida
 
 ## Methodology
 The methodlogy consists of two algorithms:-
-1. ReCoV, the original algorithm that is grounded in mathematical foundations. Recommended for tabular datasets. 
+1. ReCoV, the original algorithm that is grounded in mathematical foundations. Recommended for tabular datasets and embeddings. 
 2. FastReCoV, a computationally efficient variant that offers a slightly reduced performance but are significantly faster. Recommended for deep learning tasks with large datasets.
 An overview of the methodology and its results are shown below
 
@@ -86,4 +86,4 @@ You can reach the authors by raising an issue in this repo or
   year={2023}
 }
 ```
-To be updated with new citations after camera ready submission and publication.
+To be updated with new citations after publication.
